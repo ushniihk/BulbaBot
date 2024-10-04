@@ -5,6 +5,7 @@ import com.belka.BulbaBot.handler.HandlerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
@@ -33,21 +34,19 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final ExecutorService executorService;
 
     @Autowired
-    public TelegramBot(BotConfig botConfig, HandlerService handlerService, ExecutorService executorService) {
+    public TelegramBot(BotConfig botConfig, HandlerService handlerService, ExecutorService executorService,
+                       DefaultBotOptions options) {
+        super(options, botConfig.getToken());
         this.botConfig = botConfig;
         this.handlerService = handlerService;
         this.executorService = executorService;
         setCommands();
+
     }
 
     @Override
     public String getBotUsername() {
         return botConfig.getBotName();
-    }
-
-    @Override
-    public String getBotToken() {
-        return botConfig.getToken();
     }
 
     /**
@@ -60,7 +59,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (update.hasMessage() || update.hasCallbackQuery()) {
             executorService.execute(() -> {
                 handlerService.handle(update)
-                        .subscribe(this::executeMessage);
+                        .subscribe(this::executeMessage, this::handleError);
                 log.info("end of the onUpdateReceived method");
             });
         }
@@ -104,5 +103,14 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             log.error("Error setting bot's command list: " + e.getMessage());
         }
+    }
+
+    /**
+     * Handle errors during message execution.
+     *
+     * @param throwable the error that occurred
+     */
+    private void handleError(Throwable throwable) {
+        log.error("Error handling update: {}", throwable.getMessage());
     }
 }
