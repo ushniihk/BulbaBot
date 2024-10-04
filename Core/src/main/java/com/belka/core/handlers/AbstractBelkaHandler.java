@@ -101,3 +101,5 @@ public abstract class AbstractBelkaHandler implements BelkaHandler {
                 event.isHasCallbackQuery() && event.getData().equalsIgnoreCase(code);
     }
 }
+
+//todo add buttons to cache

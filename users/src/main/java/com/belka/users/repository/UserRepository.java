@@ -19,6 +19,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query(value = "SELECT u.* " +
             "FROM users u " +
             "INNER JOIN subscriptions s ON u.id = s.subscriber " +
-            "WHERE s.subscriber = :chatId", nativeQuery = true)
+            "WHERE s.producer = :chatId", nativeQuery = true)
     List<UserEntity> findAllFollowers(Long chatId);
 }
