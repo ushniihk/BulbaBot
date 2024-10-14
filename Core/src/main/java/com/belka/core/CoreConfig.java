@@ -1,6 +1,7 @@
 package com.belka.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
@@ -12,13 +13,16 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PreDestroy;
 import javax.sql.DataSource;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EntityScan("com.belka.core")
 @EnableJpaRepositories("com.belka.core")
+@Slf4j
 public class CoreConfig {
     @Value("${spring.datasource.url}")
     private String url;
@@ -68,5 +72,23 @@ public class CoreConfig {
     @Bean
     ExecutorService getExecutorService() {
         return Executors.newFixedThreadPool(100);
+    }
+
+    /**
+     * shut down the ExecutorService when it's no longer needed
+     */
+    @PreDestroy
+    public void shutDown() {
+        getExecutorService().shutdown();
+        try {
+            if (!getExecutorService().awaitTermination(60, TimeUnit.SECONDS)) {
+                getExecutorService().shutdownNow();
+                if (!getExecutorService().awaitTermination(60, TimeUnit.SECONDS))
+                    log.error("ExecutorService did not terminate");
+            }
+        } catch (InterruptedException ie) {
+            getExecutorService().shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }

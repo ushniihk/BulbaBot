@@ -10,7 +10,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class GetIPServiceImpl implements GetIPService {
     private final RestTemplate restTemplate;
-    @Value("${ip.link}")
+    @Value("${weather.ip.link}")
     private String link;
 
     public String getIP() {

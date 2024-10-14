@@ -54,7 +54,7 @@ public class PullAudioHandler extends AbstractBelkaHandler {
                 Long chatId = event.getChatId();
                 String[] data = event.getData().split("\\.");
                 LocalDate date = LocalDate.of(Integer.parseInt(data[1]), Integer.parseInt(data[2]) + 1, Integer.parseInt(data[3]));
-                String fileId = audioService.getFileId(chatId, date);
+                String fileId = audioService.getFileId(chatId, date).orElse("");
 
                 savePreviousAndStats(chatId);
 

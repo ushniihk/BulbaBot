@@ -1,10 +1,10 @@
 package com.belka.audio.services;
 
-import com.belka.audio.utils.OggToWavConverter;
 import com.belka.audio.entityes.AudioEntity;
 import com.belka.audio.models.NotListened;
 import com.belka.audio.repositoryes.AudioRepository;
 import com.belka.audio.repositoryes.NotListenedRepository;
+import com.belka.audio.utils.OggToWavConverter;
 import com.belka.core.converter.ConverterService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,6 @@ import java.util.Optional;
 public class AudioServiceImpl implements AudioService {
     final static String OGG = ".ogg";
     final static String WAV = ".WAV";
-    private final static String EMPTY_FILE_ID = "";
     private final RestTemplate restTemplate;
     private final HttpHeaders headers;
     private final AudioRepository audioRepository;
@@ -74,7 +73,7 @@ public class AudioServiceImpl implements AudioService {
         LocalDate today = LocalDate.now();
         if (audioRepository.existsByDateAndUserId(today, userId)) {
             try {
-                String audioIdInDB = getFileId(userId, today);
+                String audioIdInDB = getFileId(userId, today).orElse("");
                 writeDataToDB(voice, userId);
                 concatenateAudios(audioIdInDB, voice.getFileId());
             } finally {
@@ -94,7 +93,7 @@ public class AudioServiceImpl implements AudioService {
         try {
             Files.write(filePath, downloadFile);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error writing file", e);
         }
         oggToWavConverter.convert(filePath.toString());
         AudioEntity entity = AudioEntity.builder()
@@ -118,7 +117,7 @@ public class AudioServiceImpl implements AudioService {
                 throw new RuntimeException("File deletion failed.");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error deleting file", e);
         }
     }
 
@@ -177,12 +176,8 @@ public class AudioServiceImpl implements AudioService {
     }
 
     @Override
-    public String getFileId(Long userId, LocalDate date) {
-        Optional<String> audioIdInDB = audioRepository.getIdByDateAndUserId(date, userId);
-        if (audioIdInDB.isEmpty()) {
-            return EMPTY_FILE_ID;
-        }
-        return audioIdInDB.get();
+    public Optional<String> getFileId(Long userId, LocalDate date) {
+        return audioRepository.getIdByDateAndUserId(date, userId);
     }
 
     private ResponseEntity<String> getFilePath(String fileId) {

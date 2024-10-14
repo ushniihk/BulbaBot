@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class GeoFromIPServiceImpl implements GeoFromIPService {
 
-    @Value("${geo-ip.link}")
+    @Value("${weather.geo-ip.link}")
     private String link;
     private final GetIPService getIPService;
     private final RestTemplate restTemplate;

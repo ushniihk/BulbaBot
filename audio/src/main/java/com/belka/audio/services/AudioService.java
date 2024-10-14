@@ -4,6 +4,7 @@ import com.belka.audio.models.NotListened;
 import org.telegram.telegrambots.meta.api.objects.Voice;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 /**
  * service for work with audio messages
@@ -77,5 +78,5 @@ public interface AudioService {
      * @param date   for what day do I need audio
      * @return audio's id
      */
-    String getFileId(Long userId, LocalDate date);
+    Optional<String> getFileId(Long userId, LocalDate date);
 }
