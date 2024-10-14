@@ -18,9 +18,11 @@ import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * building and sending messages, receiving and processing {@link Update updates}
@@ -66,6 +68,24 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     /**
+     * shut down the ExecutorService when it's no longer needed
+     */
+    @PreDestroy
+    public void shutDown() {
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+                if (!executorService.awaitTermination(60, TimeUnit.SECONDS))
+                    log.error("ExecutorService did not terminate");
+            }
+        } catch (InterruptedException ie) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
      * send message
      *
      * @param message {@link PartialBotApiMethod message for user}
@@ -82,7 +102,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 execute(sendAudio);
             }
         } catch (TelegramApiException e) {
-            throw new RuntimeException("we couldn't execute message, " + e.getMessage());
+            log.error("Error executing message", e);
         }
     }
 
