@@ -14,11 +14,16 @@ import javax.persistence.Table;
 @Builder
 @Table(name = "not_listened")
 @Entity
+/**
+ * Entity class for not listened audios.
+ */
 public class NotListenedEntity {
     @Id
     @Column(name = "subscriber")
+    @NonNull
     private Long subscriber;
 
     @Column(name = "audio_id")
+    @NonNull
     private String audioId;
 }

@@ -6,8 +6,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
-@EntityScan("com.belka.audio")
-@EnableJpaRepositories("com.belka.audio")
+@EntityScan(AudioConfig.PACKAGE_NAME)
+@EnableJpaRepositories(AudioConfig.PACKAGE_NAME)
 @EnableScheduling
 public class AudioConfig {
+    public static final String PACKAGE_NAME = "com.belka.audio";
 }

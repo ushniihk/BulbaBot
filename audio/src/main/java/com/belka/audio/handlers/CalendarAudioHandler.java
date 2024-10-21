@@ -34,33 +34,58 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
     @Override
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (event.isHasCallbackQuery() && event.getData().equals(CODE)) {
+            try {
                 Long chatId = event.getChatId();
-                LocalDate date = LocalDate.now();
-                Integer YEAR = date.getYear();
-                Integer MONTH = date.getMonth().getValue() - 1;
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                SendMessage message = calendarService.sendCalendarMessage(chatId, YEAR, MONTH);
-                message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
-
-                return Flux.just(editMessage(message, HEADER));
-            } else if (event.getUpdate().hasCallbackQuery() &&
-                    (event.getData().startsWith(AudioCalendarService.AUDIO_CALENDAR_NEXT_MONTH) ||
-                            event.getData().startsWith(AudioCalendarService.AUDIO_CALENDAR_PREV_MONTH))) {
-                String[] dateArray = event.getData().split("-");
-                Integer YEAR = Integer.parseInt(dateArray[1]);
-                Integer MONTH = Integer.parseInt(dateArray[2]);
-                Long chatId = event.getChatId();
-                SendMessage message = calendarService.sendCalendarMessage(chatId, YEAR, MONTH);
-                message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                return Flux.just(editMessage(message, HEADER));
+                if (isCalendarCallback(event)) {
+                    return handleCalendarCallback(event, chatId);
+                } else if (isMonthChangeCallback(event)) {
+                    return handleMonthChangeCallback(event, chatId);
+                }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
+    }
+
+    private boolean isCalendarCallback(BelkaEvent event) {
+        return event.isHasCallbackQuery() && event.getData().equals(CODE);
+    }
+
+    private boolean isMonthChangeCallback(BelkaEvent event) {
+        return event.getUpdate().hasCallbackQuery() &&
+                (event.getData().startsWith(AudioCalendarService.AUDIO_CALENDAR_NEXT_MONTH) ||
+                        event.getData().startsWith(AudioCalendarService.AUDIO_CALENDAR_PREV_MONTH));
+    }
+
+
+    private Flux<PartialBotApiMethod<?>> handleCalendarCallback(BelkaEvent event, Long chatId) {
+        LocalDate date = LocalDate.now();
+        Integer year = date.getYear();
+        Integer month = date.getMonth().getValue() - 1;
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        SendMessage message = calendarService.sendCalendarMessage(chatId, year, month);
+        message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
+        return Flux.just(editMessage(message, HEADER));
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleMonthChangeCallback(BelkaEvent event, Long chatId) {
+        String[] dateArray = event.getData().split("-");
+        Integer YEAR = Integer.parseInt(dateArray[1]);
+        Integer MONTH = Integer.parseInt(dateArray[2]);
+        SendMessage message = calendarService.sendCalendarMessage(chatId, YEAR, MONTH);
+        message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(editMessage(message, HEADER));
+    }
+
+    private PartialBotApiMethod<?> createSendMessage(Long chatId, Integer YEAR, Integer MONTH, Integer messageId) {
+        SendMessage message = calendarService.sendCalendarMessage(chatId, YEAR, MONTH);
+        message.setReplyToMessageId(messageId);
+        return editMessage(message, HEADER);
     }
 
     private PreviousStepDto getPreviousStep(Long chatId) {

@@ -36,8 +36,6 @@ public class EntranceAudioHandler extends AbstractBelkaHandler {
     final static String BUTTON_CALENDAR = "calendar";
     final static String BUTTON_SUBSCRIBERS = "subscribers";
     final static String BUTTON_SUBSCRIPTIONS = "subscriptions";
-
-
     private final static String HEADER = "what would you like to do?";
     private final ExecutorService executorService;
     private final StatsService statsService;
@@ -45,16 +43,23 @@ public class EntranceAudioHandler extends AbstractBelkaHandler {
     @Override
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (event.isHasText() && event.getText().equalsIgnoreCase(CODE)) {
-                Long chatId = event.getChatId();
-
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                return Flux.just(getButtons(event.getChatId()));
+            try {
+                if (isAudioCommand(event)) {
+                    Long chatId = event.getChatId();
+                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+                    recordStats(getStats(chatId));
+                    return Flux.just(getButtons(event.getChatId()));
+                }
+            } catch (Exception e) {
+                log.error("Error in EntranceAudioHandler.handle", e);
             }
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
+    }
+
+    private boolean isAudioCommand(BelkaEvent event) {
+        return event.isHasText() && event.getText().equalsIgnoreCase(CODE);
     }
 
     private SendMessage getButtons(Long chatId) {

@@ -37,36 +37,51 @@ public class PullAudioHandler extends AbstractBelkaHandler {
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (isSubscribeCommand(event, CODE)) {
-                Long chatId = event.getChatId();
-                if (!audioService.existAudioForUser(chatId)) {
-                    return Flux.just(sendMessage(chatId, "there are no new audios for you"));
+            try {
+                if (isSubscribeCommand(event, CODE)) {
+                    return handleCalendarCommand(event);
                 }
-                NotListened notListenedAudio = audioService.getMetaDataAudioForPull();
-                String fileId = notListenedAudio.getAudioId();
-                audioService.removeAudioFromListening(notListenedAudio.getSubscriber(), fileId);
-
-                savePreviousAndStats(chatId);
-
-                return Flux.just(sendAudioFromLocalStorage(audioService.getPathToAudio(fileId), chatId));
-            }
-            if (event.isHasCallbackQuery() && event.getData().startsWith(AudioCalendarService.DATA_AUDIO_CODE)) {
-                Long chatId = event.getChatId();
-                String[] data = event.getData().split("\\.");
-                LocalDate date = LocalDate.of(Integer.parseInt(data[1]), Integer.parseInt(data[2]) + 1, Integer.parseInt(data[3]));
-                String fileId = audioService.getFileId(chatId, date).orElse("");
-
-                savePreviousAndStats(chatId);
-
-                if (fileId.isEmpty()) {
-                    return Flux.just(sendMessage(chatId, NO_AUDIO_ANSWER));
+                if (isCalendarCallback(event)) {
+                    return handleCalendarCallback(event);
                 }
-                return Flux.just(sendAudioFromLocalStorage(audioService.getPathToAudio(fileId), chatId));
-
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCalendarCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        if (!audioService.existAudioForUser(chatId)) {
+            return Flux.just(sendMessage(chatId, "there are no new audios for you"));
+        }
+        NotListened notListenedAudio = audioService.getMetaDataAudioForPull();
+        String fileId = notListenedAudio.getAudioId();
+        audioService.removeAudioFromListening(notListenedAudio.getSubscriber(), fileId);
+
+        savePreviousAndStats(chatId);
+
+        return Flux.just(sendAudioFromLocalStorage(audioService.getPathToAudio(fileId), chatId));
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCalendarCallback(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        String[] data = event.getData().split("\\.");
+        LocalDate date = LocalDate.of(Integer.parseInt(data[1]), Integer.parseInt(data[2]) + 1, Integer.parseInt(data[3]));
+        String fileId = audioService.getFileId(chatId, date).orElse("");
+
+        savePreviousAndStats(chatId);
+
+        if (fileId.isEmpty()) {
+            return Flux.just(sendMessage(chatId, NO_AUDIO_ANSWER));
+        }
+        return Flux.just(sendAudioFromLocalStorage(audioService.getPathToAudio(fileId), chatId));
+    }
+
+    private boolean isCalendarCallback(BelkaEvent event) {
+        return event.isHasCallbackQuery() && event.getData().startsWith(AudioCalendarService.DATA_AUDIO_CODE);
     }
 
     private void savePreviousAndStats(Long chatId) {
