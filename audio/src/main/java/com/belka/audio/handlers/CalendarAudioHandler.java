@@ -36,7 +36,7 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
             try {
                 Long chatId = event.getChatId();
-                if (isCalendarCallback(event)) {
+                if (isMatchingCommand(event, CODE)) {
                     return handleCalendarCallback(event, chatId);
                 } else if (isMonthChangeCallback(event)) {
                     return handleMonthChangeCallback(event, chatId);
@@ -49,7 +49,8 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
         return getCompleteFuture(future, event.getChatId());
     }
 
-    private boolean isCalendarCallback(BelkaEvent event) {
+    @Override
+    protected boolean isMatchingCommand(BelkaEvent event, String code) {
         return event.isHasCallbackQuery() && event.getData().equals(CODE);
     }
 
@@ -81,12 +82,12 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
         recordStats(getStats(chatId));
         return Flux.just(editMessage(message, HEADER));
     }
-
-    private PartialBotApiMethod<?> createSendMessage(Long chatId, Integer YEAR, Integer MONTH, Integer messageId) {
+// todo delete createSendMessage
+   /* private PartialBotApiMethod<?> createSendMessage(Long chatId, Integer YEAR, Integer MONTH, Integer messageId) {
         SendMessage message = calendarService.sendCalendarMessage(chatId, YEAR, MONTH);
         message.setReplyToMessageId(messageId);
         return editMessage(message, HEADER);
-    }
+    }*/
 
     private PreviousStepDto getPreviousStep(Long chatId) {
         return PreviousStepDto.builder()
