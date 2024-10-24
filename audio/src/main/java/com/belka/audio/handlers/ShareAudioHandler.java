@@ -23,6 +23,9 @@ import java.util.concurrent.ExecutorService;
 public class ShareAudioHandler extends AbstractBelkaHandler {
     final static String CODE = "share audio handler";
     private final static String NEXT_HANDLER = "";
+    private static final String SHARE_MESSAGE = "Great, the world will hear your voice";
+    private static final String PRIVATE_MESSAGE = "OK, the message will remain private";
+
     private final static String PREVIOUS_HANDLER = SaveAudioHandler.CODE;
     private final static String CLASS_NAME = ShareAudioHandler.class.getSimpleName();
     private final AudioService audioService;
@@ -33,22 +36,33 @@ public class ShareAudioHandler extends AbstractBelkaHandler {
     @Override
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (event.getPrevious_step().equals(PREVIOUS_HANDLER) && event.getCode().equals(CODE) && event.isHasCallbackQuery()) {
-                Long chatId = event.getChatId();
-                if (event.getData().equals(SaveAudioHandler.BUTTON_SHARE)) {
-                    audioService.changeIsPrivateFlag(true, previousService.getData(chatId));
-                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                    recordStats(getStats(chatId));
-                    return Flux.just(sendMessage(chatId, "Great, the world will hear your voice"));
-                } else {
-                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                    recordStats(getStats(chatId));
-                    return Flux.just(sendMessage(chatId, "OK, the message will remain private"));
+            try {
+                if (isMatchingCommand(event, CODE)) {
+                    return handleShareAudio(event);
                 }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
+    }
+
+    @Override
+    protected boolean isMatchingCommand(BelkaEvent event, String code) {
+        return event.getPrevious_step().equals(PREVIOUS_HANDLER) && event.getCode().equals(CODE) && event.isHasCallbackQuery();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleShareAudio(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        if (event.getData().equals(SaveAudioHandler.BUTTON_SHARE)) {
+            audioService.changeIsPrivateFlag(true, previousService.getData(chatId));
+            savePreviousAndStats(chatId);
+            return Flux.just(sendMessage(chatId, SHARE_MESSAGE));
+        } else {
+            savePreviousAndStats(chatId);
+            return Flux.just(sendMessage(chatId, PRIVATE_MESSAGE));
+        }
     }
 
     private void savePreviousAndStats(Long chatId) {

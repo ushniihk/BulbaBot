@@ -35,11 +35,15 @@ public class HelpHandler extends AbstractBelkaHandler {
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (isSubscribeCommand(event, CODE)) {
-                Long chatId = event.getChatId();
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                return Flux.just(sendMessage(chatId, TEXT_HELP));
+            try {
+                if (isMatchingCommand(event, CODE)) {
+                    Long chatId = event.getChatId();
+                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+                    recordStats(getStats(chatId));
+                    return Flux.just(sendMessage(chatId, TEXT_HELP));
+                }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });

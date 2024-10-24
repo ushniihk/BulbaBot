@@ -75,3 +75,10 @@ CREATE TABLE IF NOT EXISTS Diary
 );
 comment on table Diary is 'Stores information about notes of users in the diary';
 
+CREATE TABLE IF NOT EXISTS XXX
+(
+    id   bigint PRIMARY KEY,
+    age  bigint,
+    name text
+);
+

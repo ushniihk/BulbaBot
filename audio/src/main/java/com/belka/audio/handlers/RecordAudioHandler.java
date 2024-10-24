@@ -40,18 +40,31 @@ public class RecordAudioHandler extends AbstractBelkaHandler {
     @Override
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (event.isHasMessage() && event.getUpdate().getMessage().hasVoice()) {
-                Long chatId = event.getChatId();
-                Voice voice = event.getUpdate().getMessage().getVoice();
-                audioService.saveVoice(voice, chatId);
-
-                savePreviousStep(getPreviousStep(chatId, voice.getFileId()), CLASS_NAME);
-                recordStats(getStats(chatId));
-                return Flux.just(getButtons(event.getChatId()));
+            try {
+                if (isMatchingCommand(event, CODE)) {
+                    handleVoiceMessage(event);
+                }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
+    }
+
+    @Override
+    protected boolean isMatchingCommand(BelkaEvent event, String code) {
+        return event.isHasMessage() && event.getUpdate().getMessage().hasVoice();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleVoiceMessage(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        Voice voice = event.getUpdate().getMessage().getVoice();
+        audioService.saveVoice(voice, chatId);
+
+        savePreviousStep(getPreviousStep(chatId, voice.getFileId()), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(getButtons(event.getChatId()));
     }
 
     private SendMessage getButtons(Long chatId) {

@@ -2,9 +2,15 @@ package com.belka.audio.entityes;
 
 import lombok.*;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.time.LocalDate;
 
+/**
+ * Stores information about audio files
+ */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -96,7 +96,7 @@ public abstract class AbstractBelkaHandler implements BelkaHandler {
         );
     }
 
-    protected boolean isSubscribeCommand(BelkaEvent event, String code) {
+    protected boolean isMatchingCommand(BelkaEvent event, String code) {
         return event.isHasText() && event.getText().equalsIgnoreCase(code) ||
                 event.isHasCallbackQuery() && event.getData().equalsIgnoreCase(code);
     }

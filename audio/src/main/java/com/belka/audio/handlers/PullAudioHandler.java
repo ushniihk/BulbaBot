@@ -38,7 +38,7 @@ public class PullAudioHandler extends AbstractBelkaHandler {
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
             try {
-                if (isSubscribeCommand(event, CODE)) {
+                if (isMatchingCommand(event, CODE)) {
                     return handleCalendarCommand(event);
                 }
                 if (isCalendarCallback(event)) {

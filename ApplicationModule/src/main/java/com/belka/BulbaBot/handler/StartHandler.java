@@ -41,13 +41,17 @@ public class StartHandler extends AbstractBelkaHandler {
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (isSubscribeCommand(event, CODE)) {
-                Long chatId = event.getChatId();
-                String answer = EmojiParser.parseToUnicode("Hi, " + event.getUpdate().getMessage().getChat().getFirstName() + " nice to meet you" + " :blush:");
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                registerUser(event.getUpdate().getMessage());
-                recordStats(getStats(chatId));
-                return Flux.just(sendMessage(chatId, answer));
+            try {
+                if (isMatchingCommand(event, CODE)) {
+                    Long chatId = event.getChatId();
+                    String answer = EmojiParser.parseToUnicode("Hi, " + event.getUpdate().getMessage().getChat().getFirstName() + " nice to meet you" + " :blush:");
+                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+                    registerUser(event.getUpdate().getMessage());
+                    recordStats(getStats(chatId));
+                    return Flux.just(sendMessage(chatId, answer));
+                }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });

@@ -44,7 +44,7 @@ public class EntranceAudioHandler extends AbstractBelkaHandler {
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
             try {
-                if (isAudioCommand(event)) {
+                if (isMatchingCommand(event, CODE)) {
                     Long chatId = event.getChatId();
                     savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
                     recordStats(getStats(chatId));
@@ -58,7 +58,8 @@ public class EntranceAudioHandler extends AbstractBelkaHandler {
         return getCompleteFuture(future, event.getChatId());
     }
 
-    private boolean isAudioCommand(BelkaEvent event) {
+    @Override
+    protected boolean isMatchingCommand(BelkaEvent event, String code) {
         return event.isHasText() && event.getText().equalsIgnoreCase(CODE);
     }
 

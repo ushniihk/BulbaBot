@@ -37,7 +37,7 @@ public class WeatherHandler extends AbstractBelkaHandler {
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (isSubscribeCommand(event, CODE)) {
+            if (isMatchingCommand(event, CODE)) {
                 Long chatId = event.getChatId();
                 savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
                 recordStats(getStats(chatId));

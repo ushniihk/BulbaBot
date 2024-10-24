@@ -11,6 +11,9 @@ import java.nio.file.Path;
  */
 @Component
 public class OggToWavConverter {
+
+    private static final String WAV_EXTENSION = ".WAV";
+
     /**
      * we use ffmpeg to convert audio files from ogg format to wav format, first we need to install a server
      *
@@ -18,7 +21,7 @@ public class OggToWavConverter {
      */
     public void convert(String fileOgg) {
         // trim the extension .ogg in the string and change it to .wav
-        String fileWav = fileOgg.substring(0, fileOgg.length() - 3) + "WAV";
+        String fileWav = fileOgg.substring(0, fileOgg.length() - 3) + WAV_EXTENSION;
         String cmd = "ffmpeg -i " + fileOgg + " " + fileWav;
         try {
             Process p = Runtime.getRuntime().exec(cmd);

@@ -27,12 +27,13 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class SaveAudioHandler extends AbstractBelkaHandler {
     final static String CODE = "save audio handler";
+    final static String BUTTON_SHARE = "share";
+    final static String BUTTON_PRIVATE = "let's keep it private";
     private final static String NEXT_HANDLER = ShareAudioHandler.CODE;
     private final static String PREVIOUS_HANDLER = RecordAudioHandler.CODE;
     private final static String CLASS_NAME = SaveAudioHandler.class.getSimpleName();
-    final static String BUTTON_SHARE = "share";
-    final static String BUTTON_PRIVATE = "let's keep it private";
     private final static String HEADER = "do you want to share this";
+    private final static String DELETE_MESSAGE = "message has been deleted";
     private final AudioService audioService;
     private final ExecutorService executorService;
     private final PreviousService previousService;
@@ -41,30 +42,50 @@ public class SaveAudioHandler extends AbstractBelkaHandler {
     @Override
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (event.getPrevious_step().equals(PREVIOUS_HANDLER) && event.getCode().equals(CODE) && event.isHasCallbackQuery()) {
-                Long chatId = event.getChatId();
-                if (event.getData().equals(RecordAudioHandler.BUTTON_SAVE)) {
-                    PreviousStepDto previousStepDto = PreviousStepDto.builder()
-                            .previousStep(CODE)
-                            .nextStep(NEXT_HANDLER)
-                            .userId(chatId)
-                            // put the ID of the file to work with it at the stage where we will share the voice
-                            .data(previousService.getData(chatId))
-                            .build();
-                    savePreviousStep(previousStepDto, CLASS_NAME);
-                    recordStats(getStats(chatId));
-
-                    return Flux.just(getButtons(event.getChatId()));
-                } else {
-                    audioService.deleteVoice(previousService.getData(chatId));
-                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                    recordStats(getStats(chatId));
-                    return Flux.just(sendMessage(chatId, "message has been deleted"));
+            try {
+                if (isMatchingCommand(event, CODE)) {
+                    return handleMatchingCommand(event);
                 }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
+    }
+
+    @Override
+    protected boolean isMatchingCommand(BelkaEvent event, String code) {
+        return event.getPrevious_step().equals(PREVIOUS_HANDLER) && event.getCode().equals(CODE) && event.isHasCallbackQuery();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleMatchingCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        if (event.getData().equals(RecordAudioHandler.BUTTON_SAVE)) {
+            return handleSaveCommand(chatId);
+        } else {
+            return handleDeleteCommand(chatId);
+        }
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleSaveCommand(Long chatId) {
+        PreviousStepDto previousStepDto = PreviousStepDto.builder()
+                .previousStep(CODE)
+                .nextStep(NEXT_HANDLER)
+                .userId(chatId)
+                // put the ID of the file to work with it at the stage where we will share the voice
+                .data(previousService.getData(chatId))
+                .build();
+        savePreviousStep(previousStepDto, CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(getButtons(chatId));
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleDeleteCommand(Long chatId) {
+        audioService.deleteVoice(previousService.getData(chatId));
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(sendMessage(chatId, DELETE_MESSAGE));
     }
 
 

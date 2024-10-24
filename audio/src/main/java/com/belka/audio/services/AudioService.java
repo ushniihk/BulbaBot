@@ -10,47 +10,52 @@ import java.util.Optional;
  * service for work with audio messages
  */
 public interface AudioService {
+
     /**
-     * save {@link Voice voice} to DB
+     * Saves a {@link Voice} to the database.
      *
-     * @param voice  {@link Voice voice}
-     * @param userId ID of the user who sent this {@link Voice voice}
+     * @param voice  the {@link Voice} to save
+     * @param userId the ID of the user who sent the {@link Voice}
      */
     void saveVoice(Voice voice, Long userId);
 
+
     /**
-     * get path to Voice in local DB
+     * Retrieves the path to a {@link Voice} in the local database.
      *
-     * @param fileId voice's ID
-     * @return path to Voice in local DB
+     * @param fileId the ID of the {@link Voice}
+     * @return the path to the {@link Voice} in the local database
      */
     String getPathToAudio(String fileId);
 
     /**
-     * delete chosen Voice
+     * Deletes a {@link Voice}.
      *
-     * @param fileId Voice's ID
+     * @param fileId the ID of the {@link Voice} to delete
      */
     void deleteVoice(String fileId);
 
     /**
-     * change voice status on public or private
+     * Changes the status of a {@link Voice} to public or private.
      *
-     * @param fileId Voice's ID
-     * @param flag   if the voice status is private, the flag is false
+     * @param flag   if true, the {@link Voice} is public; if false, it is private
+     * @param fileId the ID of the {@link Voice}
      */
     void changeIsPrivateFlag(boolean flag, String fileId);
 
+
     /**
-     * deletes audio from the listening list
+     * Deletes an audio from the listening list.
      *
-     * @param userId subscriber's ID
-     * @param fileId audio's ID
+     * @param userId the ID of the subscriber
+     * @param fileId the ID of the audio
      */
     void removeAudioFromListening(Long userId, String fileId);
 
     /**
-     * get meta data about audio for listening
+     * Retrieves metadata about an audio for listening.
+     *
+     * @return the metadata of the audio
      */
     NotListened getMetaDataAudioForPull();
 
@@ -63,20 +68,19 @@ public interface AudioService {
     boolean existAudioForUser(Long userId);
 
     /**
-     * checks if an audio exists on that day
+     * Checks if there are new audios for pulling for a user.
      *
-     * @param userId user's id
-     * @param date   which day we check
-     * @return true if any note exists or false if not
+     * @param userId the ID of the subscriber
+     * @return true if there are audios for pulling, false otherwise
      */
     boolean existsByUserIdAndDate(Long userId, LocalDate date);
 
     /**
-     * get user's audio's id
+     * Retrieves the ID of a user's audio for a specific day.
      *
-     * @param userId user's id
-     * @param date   for what day do I need audio
-     * @return audio's id
+     * @param userId the ID of the user
+     * @param date   the date to retrieve the audio ID for
+     * @return an {@link Optional} containing the audio ID if found, or an empty {@link Optional} otherwise
      */
     Optional<String> getFileId(Long userId, LocalDate date);
 }
