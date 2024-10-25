@@ -12,5 +12,5 @@ public interface ConverterService {
      * @return value converted to the output type
      * @param <T> output type
      */
-    <T> T ConvertTo(Class<T> to, Object value);
+    <T> T convertTo(Class<T> to, Object value);
 }

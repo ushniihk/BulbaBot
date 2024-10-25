@@ -15,10 +15,13 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
 import javax.sql.DataSource;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Core configuration class for setting up beans and data sources.
+ */
 @Configuration
 @EntityScan("com.belka.core")
 @EnableJpaRepositories("com.belka.core")
@@ -33,6 +36,11 @@ public class CoreConfig {
     @Value("${spring.datasource.driverClassName}")
     private String driverClassName;
 
+    /**
+     * Configures the data source for PostgreSQL.
+     *
+     * @return the configured DataSource
+     */
     @Bean
     public DataSource postgresDataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
@@ -70,24 +78,24 @@ public class CoreConfig {
     }
 
     @Bean
-    ExecutorService getExecutorService() {
-        return Executors.newFixedThreadPool(100);
+    public ScheduledExecutorService ScheduledExecutorService() {
+        return Executors.newScheduledThreadPool(100);
     }
 
     /**
-     * shut down the ExecutorService when it's no longer needed
+     * Shuts down the ExecutorService when it's no longer needed.
      */
     @PreDestroy
-    public void shutDown() {
-        getExecutorService().shutdown();
+    public void shutDownExecutorService() {
+        ScheduledExecutorService().shutdown();
         try {
-            if (!getExecutorService().awaitTermination(60, TimeUnit.SECONDS)) {
-                getExecutorService().shutdownNow();
-                if (!getExecutorService().awaitTermination(60, TimeUnit.SECONDS))
+            if (!ScheduledExecutorService().awaitTermination(60, TimeUnit.SECONDS)) {
+                ScheduledExecutorService().shutdownNow();
+                if (!ScheduledExecutorService().awaitTermination(60, TimeUnit.SECONDS))
                     log.error("ExecutorService did not terminate");
             }
         } catch (InterruptedException ie) {
-            getExecutorService().shutdownNow();
+            ScheduledExecutorService().shutdownNow();
             Thread.currentThread().interrupt();
         }
     }

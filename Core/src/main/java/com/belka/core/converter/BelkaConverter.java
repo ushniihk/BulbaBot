@@ -18,10 +18,11 @@ public interface BelkaConverter<I, O> {
             return null;
         }
         if (getInputType().isInstance(input)) {
-            return convert((I) input);
+            return convert(getInputType().cast(input));
         } else {
-            throw new RuntimeException("converter fail.Expected input value - " + getInputType().getTypeName() +
-                    ", but passed - " + input.getClass().getTypeName());
+            throw new IllegalArgumentException("Conversion failed. Expected input type: "
+                    + getInputType().getTypeName() + ", but received: "
+                    + input.getClass().getTypeName());
         }
     }
 

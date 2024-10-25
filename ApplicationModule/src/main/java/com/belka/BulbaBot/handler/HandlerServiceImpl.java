@@ -24,7 +24,7 @@ public class HandlerServiceImpl implements HandlerService {
 
     @Override
     public Flux<PartialBotApiMethod<?>> handle(Update update) {
-        BelkaEvent event = converterService.ConvertTo(BelkaEvent.class, update);
+        BelkaEvent event = converterService.convertTo(BelkaEvent.class, update);
         return Flux.fromStream(handlers.stream()
                         .map(handler -> handler.handle(event)))
                 .publishOn(Schedulers.boundedElastic())

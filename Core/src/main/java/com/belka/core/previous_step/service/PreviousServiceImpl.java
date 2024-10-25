@@ -15,7 +15,7 @@ public class PreviousServiceImpl implements PreviousService {
 
     @Override
     public void save(PreviousStepDto dto) {
-        repository.save(converterService.ConvertTo(PreviousStepEntity.class, dto));
+        repository.save(converterService.convertTo(PreviousStepEntity.class, dto));
     }
 
     @Override

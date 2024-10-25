@@ -27,14 +27,14 @@ public class UserServiceImpl implements UserService {
     public Collection<UserDto> getAll() {
         return userRepository.findAll()
                 .stream()
-                .map(userEntity -> converterService.ConvertTo(UserDto.class, userEntity))
+                .map(userEntity -> converterService.convertTo(UserDto.class, userEntity))
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void save(UserDto userDto) {
-        userRepository.save(converterService.ConvertTo(UserEntity.class, userDto));
+        userRepository.save(converterService.convertTo(UserEntity.class, userDto));
         log.info("user was saved");
     }
 

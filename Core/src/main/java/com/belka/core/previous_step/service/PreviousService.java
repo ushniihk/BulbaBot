@@ -1,28 +1,29 @@
 package com.belka.core.previous_step.service;
 
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.previous_step.interfaces.PreviousStep;
 
 /**
- * service for tracking the user's previous steps
+ * Service for tracking the user's previous steps.
  */
 public interface PreviousService {
     /**
-     * saving {@link com.belka.core.previous_step.entity.PreviousStepEntity previouse step}
+     * Saves the {@link PreviousStep previous step}
      *
-     * @param dto {@link com.belka.core.previous_step.entity.PreviousStepEntity previouse step's} dto
+     * @param dto the DTO of the {@link PreviousStep previous step}
      */
     void save(PreviousStepDto dto);
 
     /**
-     * get {@link com.belka.core.previous_step.entity.PreviousStepEntity previouse step}
+     * Gets the {@link PreviousStep previous step}
      *
-     * @param chatId user's id
+     * @param chatId the user ID
      * @return code of the previous step
      */
     String getPreviousStep(Long chatId);
 
     /**
-     * get {@link com.belka.core.previous_step.entity.PreviousStepEntity next step}
+     * Gets the next step code by user ID.
      *
      * @param chatId user's id
      * @return code of the next step
@@ -30,7 +31,7 @@ public interface PreviousService {
     String getNextStep(Long chatId);
 
     /**
-     * get get {@link com.belka.core.previous_step.entity.PreviousStepEntity data}
+     * get get {@link PreviousStep previous step} date
      *
      * @param chatId user's id
      * @return data from the previous step

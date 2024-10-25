@@ -25,7 +25,7 @@ public class ConverterServiceImpl implements ConverterService {
     }
 
     @Override
-    public <T> T ConvertTo(Class<T> to, Object value) {
+    public <T> T convertTo(Class<T> to, Object value) {
         if (value == null) {
             return null;
         }

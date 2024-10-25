@@ -15,7 +15,7 @@ public class BelkaEvent {
      */
     private final Update update;
     /**
-     * user's id
+     * User's id
      */
     private final Long chatId;
     /**
@@ -23,13 +23,31 @@ public class BelkaEvent {
      */
     private final Integer updateId;
     /**
-     * previous handler's CODE
+     * Previous handler's CODE
      */
     private final String previous_step;
+    /**
+     * Current handler's CODE
+     */
     private final String code;
+    /**
+     * Callback data
+     */
     private final String data;
+    /**
+     * Message text
+     */
     private final String text;
+    /**
+     * Flag indicating if the update has a message
+     */
     private final boolean hasMessage;
+    /**
+     * Flag indicating if the message has text
+     */
     private final boolean hasText;
+    /**
+     * Flag indicating if the update has a callback query
+     */
     private final boolean hasCallbackQuery;
 }

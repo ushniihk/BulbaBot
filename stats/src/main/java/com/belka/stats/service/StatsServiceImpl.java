@@ -15,7 +15,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public void save(StatsDto dto) {
-        statsRepository.save(converterService.ConvertTo(StatsEntity.class, dto));
+        statsRepository.save(converterService.convertTo(StatsEntity.class, dto));
     }
 
     public long getTotalRequests(){

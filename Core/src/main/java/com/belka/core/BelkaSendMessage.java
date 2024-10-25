@@ -12,16 +12,17 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import java.io.File;
 
 /**
- * makes and sends {@link PartialBotApiMethod} to the user
+ * Utility class for creating and sending {@link PartialBotApiMethod} messages to the user.
  */
 @Component
 public class BelkaSendMessage {
+
     /**
-     * makes and sends {@link org.telegram.telegrambots.meta.api.objects.Message message} to the user
+     * Creates and sends a {@link SendMessage} to the user.
      *
-     * @param chatId user's ID
-     * @param answer answer to user
-     * @return text message
+     * @param chatId the user's chat ID
+     * @param answer the message text to send
+     * @return the {@link SendMessage} object
      */
     public SendMessage sendMessage(Long chatId, String answer) {
         return SendMessage.builder()
@@ -31,10 +32,11 @@ public class BelkaSendMessage {
     }
 
     /**
-     * takes a picture from the url and sends it to the user
+     * Takes a picture from the url and sends it to the user
      *
-     * @param url    link for the picture
-     * @param chatId user's chatId
+     * @param url    the URL of the picture
+     * @param chatId the user's chatId
+     * @return the {@link PartialBotApiMethod} object for sending the photo
      */
     public PartialBotApiMethod<?> sendImageFromUrl(String url, Long chatId) {
         // Create send method
@@ -47,10 +49,11 @@ public class BelkaSendMessage {
     }
 
     /**
-     * takes an audio from the path of the local storage and sends it to the user
+     * takes an audio file from local storage to the user.
      *
-     * @param path   path to the audio
-     * @param chatId user's chatId
+     * @param path   the path to the audio file
+     * @param chatId the user's chat ID
+     * @return the {@link PartialBotApiMethod} object for sending the audio
      */
     public PartialBotApiMethod<?> sendAudioFromLocalStorage(String path, Long chatId) {
         // Create send method
@@ -63,6 +66,13 @@ public class BelkaSendMessage {
         return sendAudioRequest;
     }
 
+    /**
+     * Edits an existing message.
+     *
+     * @param message the original {@link SendMessage} object
+     * @param text    the new text for the message
+     * @return the {@link PartialBotApiMethod} object for editing the message
+     */
     public PartialBotApiMethod<?> editMessage(SendMessage message, String text) {
         new EditMessageText();
         return EditMessageText.builder()

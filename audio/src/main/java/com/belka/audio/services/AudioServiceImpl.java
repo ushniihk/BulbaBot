@@ -162,7 +162,7 @@ public class AudioServiceImpl implements AudioService {
 
     @Override
     public NotListened getMetaDataAudioForPull() {
-        return converterService.ConvertTo(NotListened.class, notListenedRepository.getOldestAudio());
+        return converterService.convertTo(NotListened.class, notListenedRepository.getOldestAudio());
     }
 
     @Override

@@ -71,7 +71,7 @@ public class WeatherServiceImpl implements WeatherService {
     public void saveBatch(Collection<WeatherHistoryDto> weathers) {
         Collection<WeatherHistoryEntity> entities = new ArrayList<>();
         for (WeatherHistoryDto weather : weathers) {
-            WeatherHistoryEntity entity = converterService.ConvertTo(WeatherHistoryEntity.class, weather);
+            WeatherHistoryEntity entity = converterService.convertTo(WeatherHistoryEntity.class, weather);
             entities.add(entity);
             log.info(String.format("Message received -> %s", entity));
         }

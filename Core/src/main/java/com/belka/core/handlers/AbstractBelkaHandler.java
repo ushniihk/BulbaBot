@@ -91,7 +91,7 @@ public abstract class AbstractBelkaHandler implements BelkaHandler {
     protected void savePreviousStep(PreviousStepDto previousStep, String handlerName) {
         executorService.execute(() -> {
                     previousService.save(previousStep);
-                    log.info("previous step from {} have been saved", handlerName);
+                    log.info("Previous step from {} has been saved", handlerName);
                 }
         );
     }

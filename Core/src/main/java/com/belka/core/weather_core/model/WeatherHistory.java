@@ -1,8 +1,6 @@
 package com.belka.core.weather_core.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -10,44 +8,23 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class WeatherHistory {
+    /**
+     * Unique identifier for the weather history record.
+     */
     private Long id;
+    /**
+     * Temperature recorded.
+     */
     private Integer temp;
+    /**
+     * Date and time when the temperature was recorded.
+     */
     private LocalDateTime date;
+    /**
+     * City where the temperature was recorded.
+     */
     private String city;
-
-    public WeatherHistory(Integer temp, LocalDateTime date, String city) {
-        this.temp = temp;
-        this.date = date;
-        this.city = city;
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static final class Builder {
-        private Integer temp;
-        private LocalDateTime date;
-        private String city;
-
-        public Builder temp(Integer temp) {
-            this.temp = temp;
-            return this;
-        }
-
-        public Builder date(LocalDateTime date) {
-            this.date = date;
-            return this;
-        }
-
-        public Builder city(String city) {
-            this.city = city;
-            return this;
-        }
-
-        public WeatherHistory build() {
-            return new WeatherHistory(temp, date, city);
-        }
-    }
 }
