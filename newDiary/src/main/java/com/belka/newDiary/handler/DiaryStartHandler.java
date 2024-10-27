@@ -7,6 +7,7 @@ import com.belka.core.previous_step.service.PreviousService;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
@@ -22,10 +23,13 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class DiaryStartHandler extends AbstractBelkaHandler {
     final static String CODE = "/diary";
     private final static String NEXT_HANDLER = "";
     private final static String PREVIOUS_HANDLER = "";
+    private final static String CLASS_NAME = DiaryStartHandler.class.getSimpleName();
+
     final static String BUTTON_1 = "get diary";
     final static String BUTTON_2 = "write diary";
     private final static String HEADER_1 = "what do you want?";
@@ -36,19 +40,15 @@ public class DiaryStartHandler extends AbstractBelkaHandler {
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (event.isHasText() && event.getText().equalsIgnoreCase(CODE)) {
-                Long chatId = event.getChatId();
-                previousService.save(PreviousStepDto.builder()
-                        .previousStep(CODE)
-                        .nextStep(NEXT_HANDLER)
-                        .userId(chatId)
-                        .build());
-                statsService.save(StatsDto.builder()
-                        .userId(event.getChatId())
-                        .handlerCode(CODE)
-                        .requestTime(OffsetDateTime.now())
-                        .build());
-                return Flux.just(getButtons(chatId));
+
+            try {
+                if (isMatchingCommand(event, CODE)) {
+                    Long chatId = event.getChatId();
+                    savePreviousAndStats(chatId);
+                    return Flux.just(getButtons(chatId));
+                }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });
@@ -72,5 +72,18 @@ public class DiaryStartHandler extends AbstractBelkaHandler {
         message.setReplyMarkup(markupInLine);
 
         return message;
+    }
+
+    private void savePreviousAndStats(Long userId) {
+        previousService.save(PreviousStepDto.builder()
+                .previousStep(CODE)
+                .nextStep(NEXT_HANDLER)
+                .userId(userId)
+                .build());
+        statsService.save(StatsDto.builder()
+                .userId(userId)
+                .handlerCode(CODE)
+                .requestTime(OffsetDateTime.now())
+                .build());
     }
 }

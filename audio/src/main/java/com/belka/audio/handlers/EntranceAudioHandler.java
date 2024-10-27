@@ -51,7 +51,7 @@ public class EntranceAudioHandler extends AbstractBelkaHandler {
                     return Flux.just(getButtons(event.getChatId()));
                 }
             } catch (Exception e) {
-                log.error("Error in EntranceAudioHandler.handle", e);
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });

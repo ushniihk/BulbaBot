@@ -9,6 +9,7 @@ import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import com.belka.users.service.UserService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class DiaryShareHandler extends AbstractBelkaHandler {
     final static String CODE = "SHARE_DIARY";
     private final static String NEXT_HANDLER = "";
@@ -32,6 +34,8 @@ public class DiaryShareHandler extends AbstractBelkaHandler {
     private final static String ANSWER_FOR_SHARING = "the note has been sent";
     private final static String ANSWER_FOR_SAVING = "the note has been saved";
     private final static String PREFIX_FOR_NOTE = "note from ";
+    private final static String CLASS_NAME = DiaryShareHandler.class.getSimpleName();
+
     private final PreviousService previousService;
     private final DiaryService diaryService;
     private final StatsService statsService;
@@ -41,34 +45,54 @@ public class DiaryShareHandler extends AbstractBelkaHandler {
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (event.isHasCallbackQuery() && event.getData().equals(PREVIOUS_DATA_YES)) {
-                Long chatId = event.getChatId();
-                String note = PREFIX_FOR_NOTE + userService.getName(chatId) + "/n" + diaryService.getNote(LocalDate.now(), chatId);
-                Collection<Long> followersId = userService.getFollowersId(chatId);
-                Collection<SendMessage> messages = followersId.stream().map(id -> sendMessage(id, note)).collect(Collectors.toList());
-
-                messages.add(sendMessage(chatId, ANSWER_FOR_SHARING));
-
-                savePreviousAndStats(event);
-                return Flux.fromIterable(messages);
-            } else if (event.isHasCallbackQuery() && event.getData().equals(PREVIOUS_DATA_NO)) {
-                Long chatId = event.getChatId();
-                savePreviousAndStats(event);
-                return Flux.just(sendMessage(chatId, ANSWER_FOR_SAVING));
+            try {
+                if (isMatchingCommandYES(event)) {
+                    return handleYesCommand(event);
+                } else if (isMatchingCommandNO(event)) {
+                    return handleNoCommand(event);
+                }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
     }
 
-    private void savePreviousAndStats(BelkaEvent event) {
+    private Flux<PartialBotApiMethod<?>> handleYesCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        String note = PREFIX_FOR_NOTE + userService.getName(chatId) + "/n" + diaryService.getNote(LocalDate.now(), chatId);
+        Collection<Long> followersId = userService.getFollowersId(chatId);
+        Collection<SendMessage> messages = followersId.stream().map(id -> sendMessage(id, note)).collect(Collectors.toList());
+
+        messages.add(sendMessage(chatId, ANSWER_FOR_SHARING));
+
+        savePreviousAndStats(chatId);
+        return Flux.fromIterable(messages);
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleNoCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousAndStats(chatId);
+        return Flux.just(sendMessage(chatId, ANSWER_FOR_SAVING));
+    }
+
+    private boolean isMatchingCommandYES(BelkaEvent event) {
+        return event.isHasCallbackQuery() && event.getData().equals(PREVIOUS_DATA_YES);
+    }
+
+    private boolean isMatchingCommandNO(BelkaEvent event) {
+        return event.isHasCallbackQuery() && event.getData().equals(PREVIOUS_DATA_NO);
+    }
+
+    private void savePreviousAndStats(Long userId) {
         previousService.save(PreviousStepDto.builder()
                 .previousStep(CODE)
                 .nextStep(NEXT_HANDLER)
-                .userId(event.getChatId())
+                .userId(userId)
                 .build());
         statsService.save(StatsDto.builder()
-                .userId(event.getChatId())
+                .userId(userId)
                 .handlerCode(CODE)
                 .requestTime(OffsetDateTime.now())
                 .build());
