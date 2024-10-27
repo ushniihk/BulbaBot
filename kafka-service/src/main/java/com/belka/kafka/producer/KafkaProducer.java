@@ -22,6 +22,11 @@ public class KafkaProducer {
         this.kafkaTemplate = kafkaTemplate;
     }
 
+    /**
+     * Sends a message to the Kafka topic.
+     *
+     * @param data the WeatherHistory data to send
+     */
     public void sendMessage(WeatherHistory data) {
         log.info(String.format("Message sent -> %s", data.toString()));
         Message<WeatherHistory> message = MessageBuilder
