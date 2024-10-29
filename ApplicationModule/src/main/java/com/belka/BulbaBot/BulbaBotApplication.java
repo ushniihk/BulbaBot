@@ -11,3 +11,5 @@ public class BulbaBotApplication {
         SpringApplication.run(BulbaBotApplication.class, args);
     }
 }
+
+//todo: add exceptions handling that will show exactly what went wrong and get relevant answers
