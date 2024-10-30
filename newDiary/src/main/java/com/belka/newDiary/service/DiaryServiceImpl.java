@@ -2,13 +2,13 @@ package com.belka.newDiary.service;
 
 
 import com.belka.newDiary.entity.DiaryEntity;
+import com.belka.newDiary.exceptions.NoteNotFoundException;
 import com.belka.newDiary.repository.DiaryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -19,36 +19,39 @@ public class DiaryServiceImpl implements DiaryService {
     @Override
     public void addNote(Long chatID, String text) {
         LocalDate today = LocalDate.now();
-        Optional<DiaryEntity> entity = repository.getByDateAndUserId(today, chatID);
-        if (entity.isPresent()) {
-            DiaryEntity entityForUpdate = entity.get();
-            String newNote = entityForUpdate.getNote() + "\n" + text;
-            entityForUpdate.setNote(newNote);
-            repository.save(entityForUpdate);
-            log.info("added a note to the diary");
-        } else {
-            DiaryEntity entityForSave = DiaryEntity.builder()
-                    .date(today)
-                    .userId(chatID)
-                    .note(text)
-                    .build();
-            repository.save(entityForSave);
-            log.info("added a note to the diary");
-        }
+        repository.getByDateAndUserId(today, chatID)
+                .ifPresentOrElse(
+                        existingNote -> updateExistingNoteEntity(existingNote, text),
+                        () -> saveNewNoteEntity(chatID, text, today)
+                );
     }
 
     @Override
     public String getNote(LocalDate date, Long chatID) {
-        Optional<String> entity = repository.findNoteByUserIdAndDate(chatID, date);
-        if (entity.isEmpty()) {
-            throw new RuntimeException("sorry but there are no notes for this date");
-        }
-        return entity.get();
+        return repository.findNoteByUserIdAndDate(chatID, date)
+                .orElseThrow(() -> new NoteNotFoundException("No notes found for userId: " + chatID + " on date: " + date));
     }
 
     @Override
     public boolean existsByUserIdAndDate(Long userId, LocalDate date) {
         return repository.existsByUserIdAndDate(userId, date);
+    }
+
+    private void updateExistingNoteEntity(DiaryEntity entity, String text) {
+        String newNote = entity.getNote() + "\n" + text;
+        entity.setNote(newNote);
+        repository.save(entity);
+        log.info("Updated existing note for userId: {}, date: {}", entity.getUserId(), entity.getDate());
+    }
+
+    private void saveNewNoteEntity(Long chatID, String text, LocalDate date) {
+        DiaryEntity entity = DiaryEntity.builder()
+                .date(date)
+                .userId(chatID)
+                .note(text)
+                .build();
+        repository.save(entity);
+        log.info("Saved new note for userId: {}, date: {}", chatID, date);
     }
 }
 
