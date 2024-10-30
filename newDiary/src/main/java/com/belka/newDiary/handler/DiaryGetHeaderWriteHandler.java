@@ -24,7 +24,6 @@ import static com.belka.newDiary.handler.DiaryStartHandler.BUTTON_2;
 public class DiaryGetHeaderWriteHandler extends AbstractBelkaHandler {
     final static String CODE = "write diary header";
     private final static String NEXT_HANDLER = DiaryWriteHandler.CODE;
-    private final static String PREVIOUS_HANDLER = DiaryStartHandler.CODE;
     private final static String HEADER = "write some words";
     private final static String PREVIOUS_DATA = DiaryStartHandler.CODE + BUTTON_2;
     private final static String CLASS_NAME = DiaryGetHeaderWriteHandler.class.getSimpleName();

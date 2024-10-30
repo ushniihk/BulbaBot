@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutorService;
 public class CalendarAudioHandler extends AbstractBelkaHandler {
     final static String CODE = "/audio calendar";
     private final static String NEXT_HANDLER = "";
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = CalendarAudioHandler.class.getSimpleName();
     private final static String HEADER = "Calendar";
     private final AudioCalendarService calendarService;
@@ -82,12 +81,6 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
         recordStats(getStats(chatId));
         return Flux.just(editMessage(message, HEADER));
     }
-// todo delete createSendMessage
-   /* private PartialBotApiMethod<?> createSendMessage(Long chatId, Integer YEAR, Integer MONTH, Integer messageId) {
-        SendMessage message = calendarService.sendCalendarMessage(chatId, YEAR, MONTH);
-        message.setReplyToMessageId(messageId);
-        return editMessage(message, HEADER);
-    }*/
 
     private PreviousStepDto getPreviousStep(Long chatId) {
         return PreviousStepDto.builder()

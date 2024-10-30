@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 public class DiaryShareHandler extends AbstractBelkaHandler {
     final static String CODE = "SHARE_DIARY";
     private final static String NEXT_HANDLER = "";
-    private final static String PREVIOUS_HANDLER = DiaryWriteHandler.CODE;
     private final static String PREVIOUS_DATA_YES = DiaryWriteHandler.CODE + DiaryWriteHandler.YES_BUTTON;
     private final static String PREVIOUS_DATA_NO = DiaryWriteHandler.CODE + DiaryWriteHandler.NO_BUTTON;
     private final static String ANSWER_FOR_SHARING = "the note has been sent";

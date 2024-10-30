@@ -31,7 +31,6 @@ public class StartHandler extends AbstractBelkaHandler {
 
     private final static String CODE = "/start";
     private final static String NEXT_HANDLER = "";
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = StartHandler.class.getSimpleName();
     private final ExecutorService executorService;
     private final UserService userService;

@@ -28,7 +28,6 @@ import java.util.concurrent.ExecutorService;
 public class RecordAudioHandler extends AbstractBelkaHandler {
     final static String CODE = "/record audio";
     private final static String NEXT_HANDLER = "save audio handler";
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = RecordAudioHandler.class.getSimpleName();
     final static String BUTTON_SAVE = "SAVE";
     final static String BUTTON_DELETE = "DELETE";
@@ -42,7 +41,7 @@ public class RecordAudioHandler extends AbstractBelkaHandler {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
             try {
                 if (isMatchingCommand(event, CODE)) {
-                    handleVoiceMessage(event);
+                    return handleVoiceMessage(event);
                 }
             } catch (Exception e) {
                 log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);

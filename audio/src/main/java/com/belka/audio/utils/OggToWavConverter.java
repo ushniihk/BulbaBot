@@ -12,7 +12,7 @@ import java.nio.file.Path;
 @Component
 public class OggToWavConverter {
 
-    private static final String WAV_EXTENSION = ".WAV";
+    private static final String WAV_EXTENSION = "WAV";
 
     /**
      * we use ffmpeg to convert audio files from ogg format to wav format, first we need to install a server

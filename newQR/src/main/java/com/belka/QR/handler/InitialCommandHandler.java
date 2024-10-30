@@ -1,4 +1,4 @@
-package com.belka.BulbaBot.handler;
+package com.belka.QR.handler;
 
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
@@ -17,16 +17,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
- * a handler that shows information about bot
+ * the handler that processes the user's request to create a QR code
  */
 @Component
 @AllArgsConstructor
 @Slf4j
-public class HelpHandler extends AbstractBelkaHandler {
-    private final static String CODE = "/help";
+public class InitialCommandHandler extends AbstractBelkaHandler {
+    private final static String CODE = "/QR";
     private final static String NEXT_HANDLER = "";
-    private final static String CLASS_NAME = HelpHandler.class.getSimpleName();
-    private static final String TEXT_HELP = "This bot can show you weather in your city, generate QR code for you and get your diary.";
+    private final static String CLASS_NAME = InitialCommandHandler.class.getSimpleName();
+    private final static String HEADER_1 = "write your text";
     private final ExecutorService executorService;
     private final StatsService statsService;
 
@@ -36,10 +36,7 @@ public class HelpHandler extends AbstractBelkaHandler {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
             try {
                 if (isMatchingCommand(event, CODE)) {
-                    Long chatId = event.getChatId();
-                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                    recordStats(getStats(chatId));
-                    return Flux.just(sendMessage(chatId, TEXT_HELP));
+                    return handleStartCommand(event);
                 }
             } catch (Exception e) {
                 log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
@@ -47,6 +44,13 @@ public class HelpHandler extends AbstractBelkaHandler {
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleStartCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(sendMessage(chatId, HEADER_1));
     }
 
     private PreviousStepDto getPreviousStep(Long chatId) {

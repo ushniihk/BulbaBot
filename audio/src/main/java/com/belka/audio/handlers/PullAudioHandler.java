@@ -26,7 +26,6 @@ import java.util.concurrent.ExecutorService;
 public class PullAudioHandler extends AbstractBelkaHandler {
     final static String CODE = "/pull audio";
     private final static String NEXT_HANDLER = "";
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = PullAudioHandler.class.getSimpleName();
     private final static String NO_AUDIO_ANSWER = "there are no new audios for you";
     private final AudioService audioService;

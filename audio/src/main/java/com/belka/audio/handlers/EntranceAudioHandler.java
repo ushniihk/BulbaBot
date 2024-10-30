@@ -29,7 +29,6 @@ import java.util.concurrent.ExecutorService;
 public class EntranceAudioHandler extends AbstractBelkaHandler {
     final static String CODE = "/audio";
     private final static String NEXT_HANDLER = "";
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = EntranceAudioHandler.class.getSimpleName();
     final static String BUTTON_PULL = "pull new ones";
     final static String BUTTON_SUBSCRIBE = "subscribe to new people";

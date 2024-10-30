@@ -26,7 +26,6 @@ public class DiaryReadHandler extends AbstractBelkaHandler {
 
     final static String CODE = "READ_DIARY";
     private final static String NEXT_HANDLER = DiaryCalendarHandler.CODE;
-    private final static String PREVIOUS_HANDLER = DiaryStartHandler.CODE;
     private final static String CLASS_NAME = DiaryReadHandler.class.getSimpleName();
     private final DiaryService diaryService;
     private final PreviousService previousService;

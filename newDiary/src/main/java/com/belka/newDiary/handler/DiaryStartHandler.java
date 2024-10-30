@@ -27,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 public class DiaryStartHandler extends AbstractBelkaHandler {
     final static String CODE = "/diary";
     private final static String NEXT_HANDLER = "";
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = DiaryStartHandler.class.getSimpleName();
 
     final static String BUTTON_1 = "get diary";
