@@ -19,29 +19,30 @@ import java.util.Collection;
 public class WeatherConsumer {
     private final WeatherService service;
     private final ObjectMapper objectMapper;
-    private final String TOPIC = "weather";
-    private final String GROUP_ID = "myGroup";
     @Value("${cities.list:}#{T(java.util.Collections).emptyList()}")
     private Collection<String> cities;
     private final Collection<WeatherHistoryDto> inputs = new ArrayList<>();
 
-    @KafkaListener(topics = TOPIC, groupId = GROUP_ID)
+    @KafkaListener(topics = "${spring.kafka.consumer.topic}", groupId = "${spring.kafka.consumer.group-id}")
     public void consume(String input) {
-        inputs.add(convertToWeatherHistory(input));
-        log.info(String.format("Message received -> %s", input));
-        if (inputs.size() > cities.size()) {
-            service.saveBatch(inputs);
-            inputs.clear();
+        try {
+            inputs.add(convertToWeatherHistory(input));
+            log.info(String.format("Message received -> %s", input));
+            if (inputs.size() > cities.size()) {
+                service.saveBatch(inputs);
+                inputs.clear();
+            }
+        } catch (Exception e) {
+            log.error("Error processing message: {}", input, e);
         }
     }
 
     private WeatherHistoryDto convertToWeatherHistory(String weather) {
-        WeatherHistoryDto weatherHistoryDto;
         try {
-            weatherHistoryDto = objectMapper.readValue(weather, WeatherHistoryDto.class);
+            return objectMapper.readValue(weather, WeatherHistoryDto.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("we couldn't convert weather to history");
+            log.error("Error converting weather to WeatherHistoryDto: {}", weather, e);
+            throw new RuntimeException("Failed to convert weather to WeatherHistoryDto", e);
         }
-        return weatherHistoryDto;
     }
 }

@@ -13,6 +13,7 @@ public class GetIPServiceImpl implements GetIPService {
     @Value("${weather.ip.link}")
     private String link;
 
+    @Override
     public String getIP() {
         IP ip = restTemplate.getForObject(link, IP.class);
         if (ip == null || ip.getIp() == null) {
@@ -20,5 +21,4 @@ public class GetIPServiceImpl implements GetIPService {
         }
         return ip.getIp();
     }
-
 }

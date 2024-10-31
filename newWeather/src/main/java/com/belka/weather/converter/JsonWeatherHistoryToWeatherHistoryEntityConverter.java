@@ -3,15 +3,19 @@ package com.belka.weather.converter;
 import com.belka.core.converter.BelkaConverter;
 import com.belka.weather.dto.WeatherHistoryDto;
 import com.belka.weather.entity.WeatherHistoryEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
 @Component
+@Slf4j
 public class JsonWeatherHistoryToWeatherHistoryEntityConverter implements BelkaConverter<WeatherHistoryDto, WeatherHistoryEntity> {
     @Override
     public WeatherHistoryEntity convert(WeatherHistoryDto value) {
+        checkValue(value);
         int[] inputDate = value.getDate();
+        checkDate(inputDate);
         LocalDateTime date = LocalDateTime.of(
                 inputDate[0], inputDate[1], inputDate[2], inputDate[3], inputDate[4], inputDate[5], inputDate[6]
         );
@@ -30,5 +34,19 @@ public class JsonWeatherHistoryToWeatherHistoryEntityConverter implements BelkaC
     @Override
     public Class<WeatherHistoryDto> getInputType() {
         return WeatherHistoryDto.class;
+    }
+
+    private void checkValue(WeatherHistoryDto value) {
+        if (value == null) {
+            log.error("WeatherHistoryDto is null");
+            throw new IllegalArgumentException("WeatherHistoryDto cannot be null");
+        }
+    }
+
+    private void checkDate(int[] date) {
+        if (date == null || date.length != 7) {
+            log.error("Invalid date array: {}", date);
+            throw new IllegalArgumentException("Date array must have exactly 7 elements");
+        }
     }
 }

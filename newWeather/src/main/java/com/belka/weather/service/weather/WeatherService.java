@@ -5,23 +5,30 @@ import com.belka.weather.dto.WeatherHistoryDto;
 import java.util.Collection;
 
 /**
- * get weather for user
+ * Service interface for retrieving and saving weather information.
  */
 public interface WeatherService {
     /**
-     * get response for user about weather in his city
-     * @param city user's city
+     * Retrieves the weather response for the user's city.
+     *
+     * @param city the user's city
+     * @return the weather response as a String
      */
     String getWeatherResponse(String city);
 
+
     /**
-     * get user's city
+     * Finds the user's city.
+     *
+     * @return the name of the city
      */
     String findCity();
 
+
     /**
-     * save collection {@link WeatherHistoryDto} to DB
-     * @param weathers collection {@link WeatherHistoryDto} for saving
+     * Saves a collection of {@link WeatherHistoryDto} to the database.
+     *
+     * @param weathers the collection of {@link WeatherHistoryDto} to be saved
      */
     void saveBatch(Collection<WeatherHistoryDto> weathers);
 }

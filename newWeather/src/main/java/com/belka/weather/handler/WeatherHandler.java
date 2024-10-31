@@ -27,7 +27,6 @@ public class WeatherHandler extends AbstractBelkaHandler {
 
     private final static String CODE = "/weather";
     private final static String NEXT_HANDLER = "";
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = WeatherHandler.class.getSimpleName();
     private final ExecutorService executorService;
     private final WeatherService weatherService;
@@ -37,15 +36,23 @@ public class WeatherHandler extends AbstractBelkaHandler {
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
         CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (isMatchingCommand(event, CODE)) {
-                Long chatId = event.getChatId();
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                return Flux.just(sendMessage(chatId, weatherService.getWeatherResponse(weatherService.findCity())));
+            try {
+                if (isMatchingCommand(event, CODE)) {
+                    return handleCommand(event);
+                }
+            } catch (Exception e) {
+                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
             }
             return Flux.empty();
         });
         return getCompleteFuture(future, event.getChatId());
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(sendMessage(chatId, weatherService.getWeatherResponse(weatherService.findCity())));
     }
 
     private PreviousStepDto getPreviousStep(Long chatId) {

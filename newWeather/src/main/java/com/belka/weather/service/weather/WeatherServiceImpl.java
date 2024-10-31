@@ -3,8 +3,8 @@ package com.belka.weather.service.weather;
 import com.belka.core.converter.ConverterService;
 import com.belka.core.weather_core.model.weather.WeatherInfo;
 import com.belka.core.weather_core.model.weather.WeatherNow;
-import com.belka.weather.entity.WeatherHistoryEntity;
 import com.belka.weather.dto.WeatherHistoryDto;
+import com.belka.weather.entity.WeatherHistoryEntity;
 import com.belka.weather.repository.WeatherRepository;
 import com.belka.weather.service.geo.GeoFromIPService;
 import lombok.Data;
@@ -22,7 +22,6 @@ import java.util.Collection;
 @Data
 public class WeatherServiceImpl implements WeatherService {
 
-    private final static String CRON_EVERY_DAY = "1 * * * * *";
     @Value("${weather.key}")
     private String key;
     @Value("${weather.link}")
@@ -54,7 +53,8 @@ public class WeatherServiceImpl implements WeatherService {
     private WeatherNow getWeather(String city) {
         WeatherNow weatherNow = restTemplate.getForObject(getWeatherLink(city), WeatherNow.class);
         if (weatherNow == null || weatherNow.getWeatherInfo() == null) {
-            throw new RuntimeException("couldn't get weather data from remote server");
+            log.error("Couldn't get weather data for city: {}", city);
+            throw new RuntimeException("Couldn't get weather data from remote server");
         }
         return weatherNow;
     }
@@ -73,7 +73,7 @@ public class WeatherServiceImpl implements WeatherService {
         for (WeatherHistoryDto weather : weathers) {
             WeatherHistoryEntity entity = converterService.convertTo(WeatherHistoryEntity.class, weather);
             entities.add(entity);
-            log.info(String.format("Message received -> %s", entity));
+            log.info("Message received -> {}", entity);
         }
         repository.batchSave(entities);
         log.info("Messages saved");
