@@ -21,6 +21,7 @@ public class UpdateToBelkaEventConverter implements BelkaConverter<Update, Belka
 
     @Override
     public BelkaEvent convert(Update value) {
+        checkValue(value);
         Long chatId = getChatId(value);
         Integer updateId = value.getUpdateId();
         String previousStep = Optional.ofNullable(previousService.getPreviousStep(chatId)).orElse("");

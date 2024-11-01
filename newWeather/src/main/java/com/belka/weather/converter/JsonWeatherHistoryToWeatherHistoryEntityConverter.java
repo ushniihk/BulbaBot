@@ -36,13 +36,6 @@ public class JsonWeatherHistoryToWeatherHistoryEntityConverter implements BelkaC
         return WeatherHistoryDto.class;
     }
 
-    private void checkValue(WeatherHistoryDto value) {
-        if (value == null) {
-            log.error("WeatherHistoryDto is null");
-            throw new IllegalArgumentException("WeatherHistoryDto cannot be null");
-        }
-    }
-
     private void checkDate(int[] date) {
         if (date == null || date.length != 7) {
             log.error("Invalid date array: {}", date);

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 public class StatsEntityToDtoConverter implements BelkaConverter<StatsEntity, StatsDto> {
     @Override
     public StatsDto convert(StatsEntity value) {
+        checkValue(value);
         return StatsDto.builder()
                 .requestTime(value.getRequestTime())
                 .handlerCode(value.getHandlerCode())

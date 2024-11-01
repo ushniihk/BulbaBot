@@ -5,9 +5,10 @@ import com.belka.core.previous_step.entity.PreviousStepEntity;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PreviousStepDTOConverterToEntity implements BelkaConverter<PreviousStepDto, PreviousStepEntity> {
+public class PreviousStepDTOToEntityConverter implements BelkaConverter<PreviousStepDto, PreviousStepEntity> {
     @Override
     public PreviousStepEntity convert(PreviousStepDto value) {
+        checkValue(value);
         return PreviousStepEntity.builder()
                 .previousStep(value.getPreviousStep())
                 .userId(value.getUserId())
