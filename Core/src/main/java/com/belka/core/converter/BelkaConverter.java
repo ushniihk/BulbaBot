@@ -35,6 +35,17 @@ public interface BelkaConverter<I, O> {
 
     O convert(I value);
 
+    /**
+     * checks if value is null
+     *
+     * @param value value to check
+     */
+    default void checkValue(I value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Value cannot be null");
+        }
+    }
+
     Class<O> getOutputType();
 
     Class<I> getInputType();
