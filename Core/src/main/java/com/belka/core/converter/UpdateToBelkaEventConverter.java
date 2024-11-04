@@ -63,6 +63,6 @@ public class UpdateToBelkaEventConverter implements BelkaConverter<Update, Belka
         if (update.hasCallbackQuery()) {
             return update.getCallbackQuery().getMessage().getChatId();
         }
-        throw new RuntimeException("Received an Update without a chat ID");
+        throw new IllegalArgumentException("Received an Update without a chat ID");
     }
 }

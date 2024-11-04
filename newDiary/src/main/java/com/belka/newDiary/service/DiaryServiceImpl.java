@@ -2,7 +2,6 @@ package com.belka.newDiary.service;
 
 
 import com.belka.newDiary.entity.DiaryEntity;
-import com.belka.newDiary.exceptions.NoteNotFoundException;
 import com.belka.newDiary.repository.DiaryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +28,7 @@ public class DiaryServiceImpl implements DiaryService {
     @Override
     public String getNote(LocalDate date, Long chatID) {
         return repository.findNoteByUserIdAndDate(chatID, date)
-                .orElseThrow(() -> new NoteNotFoundException("No notes found for userId: " + chatID + " on date: " + date));
+                .orElse("No note found for this date");
     }
 
     @Override
