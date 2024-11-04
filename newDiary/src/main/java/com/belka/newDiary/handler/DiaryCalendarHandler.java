@@ -4,6 +4,7 @@ import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
 import com.belka.core.previous_step.service.PreviousService;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.newDiary.service.DiaryCalendarService;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
@@ -17,7 +18,6 @@ import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 
 @Component
 @AllArgsConstructor
@@ -32,23 +32,19 @@ public class DiaryCalendarHandler extends AbstractBelkaHandler {
     private final PreviousService previousService;
     private final DiaryCalendarService diaryCalendarService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isCalendarCall(event)) {
-                    return handleCalendar(event);
-                } else if (isChangingCalendarMonthCall(event)) {
-                    return handleCalendarMonthChanging(event);
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isCalendarCall(event)) {
+                return handleCalendar(event);
+            } else if (isChangingCalendarMonthCall(event)) {
+                return handleCalendarMonthChanging(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
     }
 
     protected boolean isCalendarCall(BelkaEvent event) {

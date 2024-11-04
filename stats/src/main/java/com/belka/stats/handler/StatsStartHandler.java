@@ -3,6 +3,7 @@ package com.belka.stats.handler;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -31,7 +31,6 @@ import java.util.concurrent.ExecutorService;
 public class StatsStartHandler extends AbstractBelkaHandler {
     final static String CODE = "/stats";
     private final static String NEXT_HANDLER = GetStatsHandler.CODE;
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = StatsStartHandler.class.getSimpleName();
     private final static String HEADER = "what stats do you want?";
     final static String BUTTON_1 = "get total requests";
@@ -41,20 +40,24 @@ public class StatsStartHandler extends AbstractBelkaHandler {
     final static String BUTTON_5 = "get most popular request by user";
     private final ExecutorService executorService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            if (isMatchingCommand(event, CODE)) {
-                Long chatId = event.getChatId();
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                return Flux.just(getButtons(chatId));
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event)) {
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(getButtons(chatId));
     }
 
     private SendMessage getButtons(Long chatId) {
@@ -78,6 +81,11 @@ public class StatsStartHandler extends AbstractBelkaHandler {
         InlineKeyboardButton button = getButton(buttonText, buttonText);
         rowInline.add(button);
         return rowInline;
+    }
+
+    private boolean isMatchingCommand(BelkaEvent event) {
+        return (event.isHasText() && event.getText().equalsIgnoreCase(CODE) ||
+                event.isHasCallbackQuery() && event.getData().equalsIgnoreCase(CODE)) && !(event.isHasText() && event.getPrevious_step().equals(GetStatsHandler.CODE));
     }
 
     private PreviousStepDto getPreviousStep(Long chatId) {

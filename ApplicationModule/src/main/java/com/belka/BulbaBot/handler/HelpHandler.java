@@ -3,6 +3,7 @@ package com.belka.BulbaBot.handler;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,6 @@ import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import reactor.core.publisher.Flux;
 
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -29,24 +29,24 @@ public class HelpHandler extends AbstractBelkaHandler {
     private static final String TEXT_HELP = "This bot can show you weather in your city, generate QR code for you and get your diary.";
     private final ExecutorService executorService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event, CODE)) {
-                    Long chatId = event.getChatId();
-                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                    recordStats(getStats(chatId));
-                    return Flux.just(sendMessage(chatId, TEXT_HELP));
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event, CODE)) {
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(sendMessage(chatId, TEXT_HELP));
     }
 
     private PreviousStepDto getPreviousStep(Long chatId) {

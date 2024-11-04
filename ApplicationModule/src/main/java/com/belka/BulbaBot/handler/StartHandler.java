@@ -3,6 +3,7 @@ package com.belka.BulbaBot.handler;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import com.belka.users.dto.UserDto;
@@ -18,7 +19,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import reactor.core.publisher.Flux;
 
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -35,26 +35,26 @@ public class StartHandler extends AbstractBelkaHandler {
     private final ExecutorService executorService;
     private final UserService userService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event, CODE)) {
-                    Long chatId = event.getChatId();
-                    String answer = EmojiParser.parseToUnicode("Hi, " + event.getUpdate().getMessage().getChat().getFirstName() + " nice to meet you" + " :blush:");
-                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                    registerUser(event.getUpdate().getMessage());
-                    recordStats(getStats(chatId));
-                    return Flux.just(sendMessage(chatId, answer));
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event, CODE)) {
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        String answer = EmojiParser.parseToUnicode("Hi, " + event.getUpdate().getMessage().getChat().getFirstName() + " nice to meet you" + " :blush:");
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        registerUser(event.getUpdate().getMessage());
+        recordStats(getStats(chatId));
+        return Flux.just(sendMessage(chatId, answer));
     }
 
     private void registerUser(Message message) {

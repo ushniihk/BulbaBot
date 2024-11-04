@@ -4,6 +4,7 @@ import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
 import com.belka.core.previous_step.service.PreviousService;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.newDiary.service.DiaryCalendarService;
 import com.belka.newDiary.service.DiaryService;
 import com.belka.stats.StatsDto;
@@ -17,7 +18,6 @@ import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 
 @Component
 @AllArgsConstructor
@@ -30,26 +30,26 @@ public class DiaryReadHandler extends AbstractBelkaHandler {
     private final DiaryService diaryService;
     private final PreviousService previousService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event)) {
-                    Long chatId = event.getChatId();
-                    LocalDate date = parseDateFromEvent(event);
-
-                    savePreviousStep(chatId);
-                    saveStats(chatId);
-                    return Flux.just(sendMessage(chatId, diaryService.getNote(date, chatId)));
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event)) {
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        LocalDate date = parseDateFromEvent(event);
+
+        savePreviousStep(chatId);
+        saveStats(chatId);
+        return Flux.just(sendMessage(chatId, diaryService.getNote(date, chatId)));
     }
 
     private LocalDate parseDateFromEvent(BelkaEvent event) {

@@ -3,6 +3,7 @@ package com.belka.audio.handlers;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import com.belka.users.handler.subscribes.subscibers.GetSubscribersHandler;
@@ -11,6 +12,7 @@ import com.belka.users.handler.subscribes.subscriptions.subscribe.SubscribeHandl
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -20,7 +22,6 @@ import reactor.core.publisher.Flux;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Component
@@ -38,23 +39,24 @@ public class EntranceAudioHandler extends AbstractBelkaHandler {
     private final static String HEADER = "what would you like to do?";
     private final ExecutorService executorService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
+    @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event, CODE)) {
-                    Long chatId = event.getChatId();
-                    savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                    recordStats(getStats(chatId));
-                    return Flux.just(getButtons(event.getChatId()));
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event, CODE)) {
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(getButtons(event.getChatId()));
     }
 
     @Override

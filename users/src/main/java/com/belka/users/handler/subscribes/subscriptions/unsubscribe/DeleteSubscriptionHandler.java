@@ -3,6 +3,7 @@ package com.belka.users.handler.subscribes.subscriptions.unsubscribe;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import com.belka.users.service.UserService;
@@ -15,7 +16,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import reactor.core.publisher.Flux;
 
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import static com.belka.users.handler.subscribes.subscriptions.unsubscribe.ChooseWhoToUnsubscribeFromHandler.NO_BUTTON;
@@ -38,31 +38,39 @@ public class DeleteSubscriptionHandler extends AbstractBelkaHandler {
     private final UserService userService;
     private final ExecutorService executorService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
+        return completableFutureUtil.supplyAsync(() -> {
             if (isSubscribeCommandYes(event)) {
-                Long chatId = event.getChatId();
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                Long producerId = Long.valueOf(event.getData().substring((PREFIX_FOR_UNSUBSCRIBE_CALLBACK + YES_BUTTON).length()));
-                userService.toUnsubscribe(chatId, producerId);
-                SendMessage message = sendMessage(chatId, UNSUBSCRIBE_ANSWER);
-                message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
-                return Flux.just(editMessage(message, UNSUBSCRIBE_ANSWER));
+                return handleCommandYes(event);
             } else if (isSubscribeCommandNo(event)) {
-                Long chatId = event.getChatId();
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                SendMessage message = sendMessage(chatId, EVERYONE_STAYS_ANSWER);
-                message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
-                return Flux.just(editMessage(message, EVERYONE_STAYS_ANSWER));
+                return handleCommandNo(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommandYes(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        Long producerId = Long.valueOf(event.getData().substring((PREFIX_FOR_UNSUBSCRIBE_CALLBACK + YES_BUTTON).length()));
+        userService.toUnsubscribe(chatId, producerId);
+        SendMessage message = sendMessage(chatId, UNSUBSCRIBE_ANSWER);
+        message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
+        return Flux.just(editMessage(message, UNSUBSCRIBE_ANSWER));
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommandNo(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        SendMessage message = sendMessage(chatId, EVERYONE_STAYS_ANSWER);
+        message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
+        return Flux.just(editMessage(message, EVERYONE_STAYS_ANSWER));
     }
 
     private boolean isSubscribeCommandYes(BelkaEvent event) {

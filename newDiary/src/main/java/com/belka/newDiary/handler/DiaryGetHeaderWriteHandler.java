@@ -4,6 +4,7 @@ import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
 import com.belka.core.previous_step.service.PreviousService;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import lombok.AllArgsConstructor;
@@ -14,7 +15,6 @@ import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import reactor.core.publisher.Flux;
 
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 
 import static com.belka.newDiary.handler.DiaryStartHandler.BUTTON_2;
 
@@ -30,24 +30,24 @@ public class DiaryGetHeaderWriteHandler extends AbstractBelkaHandler {
 
     private final PreviousService previousService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event)) {
-                    Long chatId = event.getChatId();
-                    savePreviousStep(chatId);
-                    saveStats(chatId);
-                    return Flux.just(sendMessage(chatId, HEADER));
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event)) {
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(chatId);
+        saveStats(chatId);
+        return Flux.just(sendMessage(chatId, HEADER));
     }
 
     private boolean isMatchingCommand(BelkaEvent event) {

@@ -3,6 +3,7 @@ package com.belka.users.handler;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import com.belka.users.UserConfig;
@@ -17,7 +18,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -36,22 +36,26 @@ public class SendingMessageHandler extends AbstractBelkaHandler {
     private final UserService userService;
     private final UserConfig userConfig;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
+        return completableFutureUtil.supplyAsync(() -> {
             if (isSubscribeCommand(event)) {
-                Long chatId = event.getChatId();
-                String textToSend = EmojiParser.parseToUnicode(event.getText());
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                return Flux.fromIterable(userService.getAll())
-                        .flatMap(userDto -> Mono.just(sendMessage(userDto.getId(), textToSend)));
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        String textToSend = EmojiParser.parseToUnicode(event.getText());
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.fromIterable(userService.getAll())
+                .flatMap(userDto -> Mono.just(sendMessage(userDto.getId(), textToSend)));
     }
 
     private boolean isSubscribeCommand(BelkaEvent event) {

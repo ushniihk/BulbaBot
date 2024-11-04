@@ -4,6 +4,7 @@ import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
 import com.belka.core.previous_step.service.PreviousService;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.newDiary.service.DiaryService;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
@@ -20,7 +21,6 @@ import reactor.core.publisher.Flux;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 @Component
@@ -37,21 +37,17 @@ public class DiaryWriteHandler extends AbstractBelkaHandler {
     private final PreviousService previousService;
     private final DiaryService diaryService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event)) {
-                    return handleCommand(event);
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event)) {
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
     }
 
     private boolean isMatchingCommand(BelkaEvent event) {

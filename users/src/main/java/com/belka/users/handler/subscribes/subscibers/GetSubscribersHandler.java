@@ -3,6 +3,7 @@ package com.belka.users.handler.subscribes.subscibers;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import com.belka.users.service.UserService;
@@ -15,7 +16,6 @@ import reactor.core.publisher.Flux;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -27,27 +27,30 @@ import java.util.concurrent.ExecutorService;
 public class GetSubscribersHandler extends AbstractBelkaHandler {
     public final static String CODE = "/get_subscribers";
     private final static String NEXT_HANDLER = SubscribersHandler.CODE;
-    private final static String PREVIOUS_HANDLER = "";
     private final static String CLASS_NAME = GetSubscribersHandler.class.getSimpleName();
     private final static String ANSWER_PREFIX = "You have %d subscribers by now: %s";
     private final static String ANSWER_NO_SUBSCRIPTIONS = "You don't have any subscribers";
     private final UserService userService;
     private final StatsService statsService;
     private final ExecutorService executorService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
+        return completableFutureUtil.supplyAsync(() -> {
             if (isMatchingCommand(event, CODE)) {
-                Long chatId = event.getChatId();
-                savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
-                recordStats(getStats(chatId));
-                return Flux.just(sendMessage(chatId, getAnswer(chatId)));
+                return handleCommand(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
+    }
+
+    private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        Long chatId = event.getChatId();
+        savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
+        recordStats(getStats(chatId));
+        return Flux.just(sendMessage(chatId, getAnswer(chatId)));
     }
 
     private String getAnswer(Long chatId) {

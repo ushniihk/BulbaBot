@@ -4,18 +4,19 @@ import com.belka.audio.services.AudioCalendarService;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Component
@@ -29,23 +30,19 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
     private final AudioCalendarService calendarService;
     private final ExecutorService executorService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
+    @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                Long chatId = event.getChatId();
-                if (isMatchingCommand(event, CODE)) {
-                    return handleCalendarCallback(event, chatId);
-                } else if (isMonthChangeCallback(event)) {
-                    return handleMonthChangeCallback(event, chatId);
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event, CODE)) {
+                return handleCalendarCallback(event);
+            } else if (isMonthChangeCallback(event)) {
+                return handleMonthChangeCallback(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
     }
 
     @Override
@@ -60,7 +57,8 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
     }
 
 
-    private Flux<PartialBotApiMethod<?>> handleCalendarCallback(BelkaEvent event, Long chatId) {
+    private Flux<PartialBotApiMethod<?>> handleCalendarCallback(BelkaEvent event) {
+        Long chatId = event.getChatId();
         LocalDate date = LocalDate.now();
         Integer year = date.getYear();
         Integer month = date.getMonth().getValue() - 1;
@@ -71,7 +69,8 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
         return Flux.just(editMessage(message, HEADER));
     }
 
-    private Flux<PartialBotApiMethod<?>> handleMonthChangeCallback(BelkaEvent event, Long chatId) {
+    private Flux<PartialBotApiMethod<?>> handleMonthChangeCallback(BelkaEvent event) {
+        Long chatId = event.getChatId();
         String[] dateArray = event.getData().split("-");
         Integer YEAR = Integer.parseInt(dateArray[1]);
         Integer MONTH = Integer.parseInt(dateArray[2]);

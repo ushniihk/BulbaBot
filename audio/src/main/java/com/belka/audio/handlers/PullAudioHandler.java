@@ -6,6 +6,7 @@ import com.belka.audio.services.AudioService;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.handlers.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
+import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.StatsDto;
 import com.belka.stats.service.StatsService;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,6 @@ import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Component
@@ -31,24 +31,20 @@ public class PullAudioHandler extends AbstractBelkaHandler {
     private final AudioService audioService;
     private final ExecutorService executorService;
     private final StatsService statsService;
+    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event, CODE)) {
-                    return handleCalendarCommand(event);
-                }
-                if (isCalendarCallback(event)) {
-                    return handleCalendarCallback(event);
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+        return completableFutureUtil.supplyAsync(() -> {
+            if (isMatchingCommand(event, CODE)) {
+                return handleCalendarCommand(event);
+            }
+            if (isCalendarCallback(event)) {
+                return handleCalendarCallback(event);
             }
             return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        }, CLASS_NAME).join();
     }
 
     private Flux<PartialBotApiMethod<?>> handleCalendarCommand(BelkaEvent event) {
