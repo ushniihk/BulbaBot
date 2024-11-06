@@ -5,6 +5,7 @@ import com.belka.newDiary.entity.DiaryEntity;
 import com.belka.newDiary.repository.DiaryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ public class DiaryServiceImpl implements DiaryService {
     }
 
     @Override
+    @Cacheable(value = "notes", key = "#date.toString() + #chatID")
     public String getNote(LocalDate date, Long chatID) {
         return repository.findNoteByUserIdAndDate(chatID, date)
                 .orElse("No note found for this date");
