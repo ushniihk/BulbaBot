@@ -1,6 +1,7 @@
 package com.belka.newDiary;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -19,11 +20,14 @@ import java.util.concurrent.TimeUnit;
 @EnableCaching
 public class DiaryConfig {
 
-    @Bean
+    @Value("${diary.cache.expirationTime}")
+    private Long expirationTime;
+
+    @Bean(name = "diaryCacheManager")
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("notes");
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterAccess(10, TimeUnit.SECONDS));
+                .expireAfterAccess(expirationTime, TimeUnit.MINUTES));
         return cacheManager;
     }
 }

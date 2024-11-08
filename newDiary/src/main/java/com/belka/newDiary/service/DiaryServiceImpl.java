@@ -5,6 +5,7 @@ import com.belka.newDiary.entity.DiaryEntity;
 import com.belka.newDiary.repository.DiaryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 @Service
 @Slf4j
 @AllArgsConstructor
+@CacheConfig(cacheManager = "diaryCacheManager")
 public class DiaryServiceImpl implements DiaryService {
     private final DiaryRepository repository;
 
