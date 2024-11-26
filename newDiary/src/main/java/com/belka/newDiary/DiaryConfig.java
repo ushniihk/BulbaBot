@@ -21,13 +21,14 @@ import java.util.concurrent.TimeUnit;
 public class DiaryConfig {
 
     @Value("${diary.cache.expirationTime}")
-    private Long expirationTime;
+    private Integer expirationTime;
 
     @Bean(name = "diaryCacheManager")
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("notes");
-        cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterAccess(expirationTime, TimeUnit.MINUTES));
+        cacheManager.setCaffeine(
+                Caffeine.newBuilder()
+                        .expireAfterAccess(expirationTime, TimeUnit.MINUTES));
         return cacheManager;
     }
 }
