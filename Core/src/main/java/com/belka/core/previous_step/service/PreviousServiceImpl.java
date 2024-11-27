@@ -1,6 +1,6 @@
 package com.belka.core.previous_step.service;
 
-import com.belka.core.converter.ConverterService;
+import com.belka.core.converters.ConverterService;
 import com.belka.core.previous_step.dto.PreviousStepDto;
 import com.belka.core.previous_step.entity.PreviousStepEntity;
 import com.belka.core.previous_step.repositoty.PreviousStepRepository;

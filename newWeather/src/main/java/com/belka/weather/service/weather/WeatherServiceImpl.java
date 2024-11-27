@@ -1,6 +1,6 @@
 package com.belka.weather.service.weather;
 
-import com.belka.core.converter.ConverterService;
+import com.belka.core.converters.ConverterService;
 import com.belka.core.weather_core.model.weather.WeatherInfo;
 import com.belka.core.weather_core.model.weather.WeatherNow;
 import com.belka.weather.dto.WeatherHistoryDto;
@@ -43,7 +43,7 @@ public class WeatherServiceImpl implements WeatherService {
 
     public String getWeatherResponse(String city) {
         WeatherInfo weatherInfo = getWeather(city).getWeatherInfo();
-        String text = "temp is " + weatherInfo.getTemp() + ", filling like " + weatherInfo.getFeelsLike();
+        String text = city + "\n" + "temp is " + weatherInfo.getTemp() + ", filling like " + weatherInfo.getFeelsLike();
         if (weatherInfo.getTemp() < 0) {
             return "⛄" + text + "⛄";
         }

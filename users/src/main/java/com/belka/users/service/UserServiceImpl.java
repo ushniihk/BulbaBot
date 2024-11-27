@@ -1,6 +1,6 @@
 package com.belka.users.service;
 
-import com.belka.core.converter.ConverterService;
+import com.belka.core.converters.ConverterService;
 import com.belka.users.dto.UserDto;
 import com.belka.users.entities.SubscriptionEntity;
 import com.belka.users.entities.UserEntity;

@@ -1,11 +1,11 @@
 package com.belka.audio.services;
 
-import com.belka.audio.entityes.AudioEntity;
+import com.belka.audio.entities.AudioEntity;
 import com.belka.audio.models.NotListened;
-import com.belka.audio.repositoryes.AudioRepository;
-import com.belka.audio.repositoryes.NotListenedRepository;
+import com.belka.audio.repositories.AudioRepository;
+import com.belka.audio.repositories.NotListenedRepository;
 import com.belka.audio.utils.OggToWavConverter;
-import com.belka.core.converter.ConverterService;
+import com.belka.core.converters.ConverterService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;

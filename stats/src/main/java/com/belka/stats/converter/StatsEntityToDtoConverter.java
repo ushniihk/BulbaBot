@@ -1,6 +1,6 @@
 package com.belka.stats.converter;
 
-import com.belka.core.converter.BelkaConverter;
+import com.belka.core.converters.BelkaConverter;
 import com.belka.stats.StatsDto;
 import com.belka.stats.StatsEntity;
 import org.springframework.stereotype.Component;

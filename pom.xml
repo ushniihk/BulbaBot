@@ -13,6 +13,7 @@
         <module>stats</module>
         <module>audio</module>
         <module>Core</module>
+        <module>WeatherCore</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>

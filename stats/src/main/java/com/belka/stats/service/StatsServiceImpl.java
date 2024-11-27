@@ -1,6 +1,6 @@
 package com.belka.stats.service;
 
-import com.belka.core.converter.ConverterService;
+import com.belka.core.converters.ConverterService;
 import com.belka.stats.StatsDto;
 import com.belka.stats.StatsEntity;
 import com.belka.stats.StatsRepository;

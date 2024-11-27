@@ -1,6 +1,6 @@
 package com.belka.weather.converter;
 
-import com.belka.core.converter.BelkaConverter;
+import com.belka.core.converters.BelkaConverter;
 import com.belka.weather.dto.WeatherHistoryDto;
 import com.belka.weather.entity.WeatherHistoryEntity;
 import lombok.extern.slf4j.Slf4j;

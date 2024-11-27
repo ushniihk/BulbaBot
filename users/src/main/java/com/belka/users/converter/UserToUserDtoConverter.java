@@ -1,6 +1,6 @@
 package com.belka.users.converter;
 
-import com.belka.core.converter.BelkaConverter;
+import com.belka.core.converters.BelkaConverter;
 import com.belka.users.entities.UserEntity;
 import com.belka.users.dto.UserDto;
 import org.springframework.stereotype.Component;
