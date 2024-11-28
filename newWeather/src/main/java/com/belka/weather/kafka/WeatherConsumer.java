@@ -1,19 +1,18 @@
 package com.belka.weather.kafka;
 
 import com.belka.weather.dto.WeatherHistoryDto;
-import com.belka.weather.service.weather.WeatherService;
+import com.belka.weather.services.weather.WeatherService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-@Component
+//@Component
 @Slf4j
 @AllArgsConstructor
 public class WeatherConsumer {

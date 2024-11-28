@@ -1,13 +1,13 @@
 package com.belka.BulbaBot.handler;
 
 import com.belka.core.handlers.AbstractBelkaHandler;
-import com.belka.core.handlers.BelkaEvent;
+import com.belka.core.models.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
 import com.belka.core.utils.CompletableFutureUtil;
-import com.belka.stats.StatsDto;
-import com.belka.stats.service.StatsService;
-import com.belka.users.dto.UserDto;
-import com.belka.users.service.UserService;
+import com.belka.stats.models.Stats;
+import com.belka.stats.services.StatsService;
+import com.belka.users.models.User;
+import com.belka.users.services.UserService;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,14 +60,14 @@ public class StartHandler extends AbstractBelkaHandler {
     private void registerUser(Message message) {
         if (!userService.existsById(message.getChatId())) {
             Chat chat = message.getChat();
-            UserDto userDto = UserDto.builder()
+            User user = User.builder()
                     .id(chat.getId())
                     .firstname(chat.getFirstName())
                     .lastname(chat.getLastName())
                     .username(chat.getUserName())
                     .registeredAt(OffsetDateTime.now())
                     .build();
-            userService.save(userDto);
+            userService.save(user);
         }
     }
 
@@ -80,17 +80,17 @@ public class StartHandler extends AbstractBelkaHandler {
                 .build();
     }
 
-    private StatsDto getStats(Long chatId) {
-        return StatsDto.builder()
+    private Stats getStats(Long chatId) {
+        return Stats.builder()
                 .userId(chatId)
                 .handlerCode(CODE)
                 .requestTime(OffsetDateTime.now())
                 .build();
     }
 
-    private void recordStats(StatsDto statsDto) {
+    private void recordStats(Stats stats) {
         executorService.execute(() -> {
-                    statsService.save(statsDto);
+                    statsService.save(stats);
                     log.info("Stats from {} have been recorded", CLASS_NAME);
                 }
         );

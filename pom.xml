@@ -4,16 +4,16 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>newQR</module>
+        <module>QR</module>
         <module>newWeather</module>
         <module>ApplicationModule</module>
-        <module>newDiary</module>
+        <module>diary</module>
         <module>kafka-service</module>
         <module>users</module>
         <module>stats</module>
         <module>audio</module>
-        <module>Core</module>
-        <module>WeatherCore</module>
+        <module>core</module>
+        <module>weather_core</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>

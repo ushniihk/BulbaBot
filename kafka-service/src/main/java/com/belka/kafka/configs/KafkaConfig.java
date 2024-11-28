@@ -1,6 +1,6 @@
 package com.belka.kafka.configs;
 
-import com.belka.core.CoreConfig;
+import com.belka.core.configs.CoreConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.domain.EntityScan;

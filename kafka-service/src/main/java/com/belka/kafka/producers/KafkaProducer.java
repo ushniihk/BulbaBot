@@ -1,6 +1,6 @@
 package com.belka.kafka.producers;
 
-import com.belka.core.weather_core.model.WeatherHistory;
+import com.belka.weather_core.models.WeatherHistory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;

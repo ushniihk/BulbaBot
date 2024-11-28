@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.belka</groupId>
-            <artifactId>Core</artifactId>
+            <artifactId>core</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

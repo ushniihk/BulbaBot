@@ -2,7 +2,7 @@ package com.belka.BulbaBot.handler;
 
 import com.belka.core.BelkaSendMessage;
 import com.belka.core.converters.ConverterService;
-import com.belka.core.handlers.BelkaEvent;
+import com.belka.core.models.BelkaEvent;
 import com.belka.core.handlers.BelkaHandler;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

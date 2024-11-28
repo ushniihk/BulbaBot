@@ -4,11 +4,11 @@ import com.belka.audio.models.NotListened;
 import com.belka.audio.services.AudioCalendarService;
 import com.belka.audio.services.AudioService;
 import com.belka.core.handlers.AbstractBelkaHandler;
-import com.belka.core.handlers.BelkaEvent;
+import com.belka.core.models.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
 import com.belka.core.utils.CompletableFutureUtil;
-import com.belka.stats.StatsDto;
-import com.belka.stats.service.StatsService;
+import com.belka.stats.models.Stats;
+import com.belka.stats.services.StatsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -93,17 +93,17 @@ public class PullAudioHandler extends AbstractBelkaHandler {
                 .build();
     }
 
-    private StatsDto getStats(Long chatId) {
-        return StatsDto.builder()
+    private Stats getStats(Long chatId) {
+        return Stats.builder()
                 .userId(chatId)
                 .handlerCode(CODE)
                 .requestTime(OffsetDateTime.now())
                 .build();
     }
 
-    private void recordStats(StatsDto statsDto) {
+    private void recordStats(Stats stats) {
         executorService.execute(() -> {
-                    statsService.save(statsDto);
+                    statsService.save(stats);
                     log.info("Stats from {} have been recorded", CLASS_NAME);
                 }
         );
