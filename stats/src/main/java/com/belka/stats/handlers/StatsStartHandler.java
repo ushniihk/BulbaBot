@@ -38,6 +38,8 @@ public class StatsStartHandler extends AbstractBelkaHandler {
     final static String BUTTON_3 = "get total Requests by code";
     final static String BUTTON_4 = "get most popular request";
     final static String BUTTON_5 = "get most popular request by user";
+    final static String BUTTON_6 = "get total number of users";
+
     private final ExecutorService executorService;
     private final StatsService statsService;
     private final CompletableFutureUtil completableFutureUtil;
@@ -66,7 +68,7 @@ public class StatsStartHandler extends AbstractBelkaHandler {
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
         //collection of all buttons
-        Collection<String> buttons = List.of(BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5);
+        Collection<String> buttons = List.of(BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6);
 
         buttons.forEach(button -> rowsInLine.add(getRowInline(button)));
 

@@ -71,6 +71,10 @@ public class GetStatsHandler extends AbstractBelkaHandler {
                 savePreviousAndStats(chatId);
                 return Flux.just(sendMessage(chatId, String.valueOf(statsService.getMostPopularRequestByUser(chatId))));
             }
+            case BUTTON_6 -> {
+                savePreviousAndStats(chatId);
+                return Flux.just(sendMessage(chatId, String.valueOf(statsService.countAllUsers())));
+            }
         }
         return Flux.empty();
     }

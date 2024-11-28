@@ -22,8 +22,10 @@ public interface StatsRepository extends JpaRepository<StatsEntity, Long> {
             nativeQuery = true)
     String getMostPopularRequestByUser(Long chatId);
 
-    long countByHandlerCode(String code);
+    Long countByHandlerCode(String code);
 
-    long countByUserId(Long chatId);
+    Long countByUserId(Long chatId);
+    @Query(value = "SELECT COUNT(*) FROM users", nativeQuery = true)
+    Long countAllUsers();
 
 }

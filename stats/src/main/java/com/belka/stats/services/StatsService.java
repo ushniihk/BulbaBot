@@ -17,21 +17,21 @@ public interface StatsService {
     /**
      * get number of requests
      */
-    long getTotalRequests();
+    Long getTotalRequests();
 
     /**
      * get number of requests by user's id
      *
      * @param chatId {@link BelkaEvent 's chatId}
      */
-    long getTotalRequestsByUser(Long chatId);
+    Long getTotalRequestsByUser(Long chatId);
 
     /**
      * get number of requests by code
      *
      * @param code {@link com.belka.core.handlers.BelkaHandler's code}
      */
-    long getTotalRequestsByCode(String code);
+    Long getTotalRequestsByCode(String code);
 
     /**
      * get {@link com.belka.core.handlers.BelkaHandler's code} with the maximum number of requests
@@ -44,5 +44,6 @@ public interface StatsService {
      * @param chatId {@link BelkaEvent 's chatId}
      */
     String getMostPopularRequestByUser(Long chatId);
+    Long countAllUsers();
 
 }

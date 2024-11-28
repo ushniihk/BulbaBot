@@ -18,17 +18,17 @@ public class StatsServiceImpl implements StatsService {
         statsRepository.save(converterService.convertTo(StatsEntity.class, dto));
     }
 
-    public long getTotalRequests(){
+    public Long getTotalRequests(){
         return statsRepository.count();
     }
 
     @Override
-    public long getTotalRequestsByUser(Long chatId) {
+    public Long getTotalRequestsByUser(Long chatId) {
         return statsRepository.countByUserId(chatId);
     }
 
     @Override
-    public long getTotalRequestsByCode(String code) {
+    public Long getTotalRequestsByCode(String code) {
         return statsRepository.countByHandlerCode(code);
     }
 
@@ -40,6 +40,11 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public String getMostPopularRequestByUser(Long chatId) {
         return statsRepository.getMostPopularRequestByUser(chatId);
+    }
+
+    @Override
+    public Long countAllUsers() {
+        return statsRepository.countAllUsers();
     }
 
 }
