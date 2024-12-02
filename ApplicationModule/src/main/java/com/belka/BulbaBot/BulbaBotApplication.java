@@ -15,3 +15,4 @@ public class BulbaBotApplication {
 //todo: add exceptions handling that will show exactly what went wrong and get relevant answers
 // todo: check properties visibility, why we can see some of them in the code? I mean we use values from main properties but should use from local properties
 // if you want to turn on kafka-service you should uncomment docker-compose and WeatherConsumer
+// todo: hide secure info(keys, passwords, etc.)
