@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class speachApplication {
+public class SpeechRecognitionApplication {
     public static void main(String[] args) {
-        SpringApplication.run(speachApplication.class, args);
+        SpringApplication.run(SpeechRecognitionApplication.class, args);
     }
 }

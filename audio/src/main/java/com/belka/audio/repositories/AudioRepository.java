@@ -24,6 +24,6 @@ public interface AudioRepository extends JpaRepository<AudioEntity, String>, Aud
 
     boolean existsByDateAndUserId(LocalDate date, Long userId);
 
-    @Query(value = "SELECT a.id FROM audio a WHERE a.date = :date AND a.user_id = :userId ORDER BY a.id ASC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT a.id FROM audio a WHERE a.date = :date AND a.user_id = :userId ORDER BY a.id LIMIT 1", nativeQuery = true)
     Optional<String> getIdByDateAndUserId(LocalDate date, Long userId);
 }

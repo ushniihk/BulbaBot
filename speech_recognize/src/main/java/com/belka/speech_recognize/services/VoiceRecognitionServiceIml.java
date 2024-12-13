@@ -1,16 +1,15 @@
-package com.belka.speech_recognize;
+package com.belka.speech_recognize.services;
 
+import com.belka.speech_recognize.utils.AzureSpeechToTextClient;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 
 @Service
-public class VoiceRecognitionService {
+@AllArgsConstructor
+public class VoiceRecognitionServiceIml implements VoiceRecognitionService {
     private final AzureSpeechToTextClient speechToTextClient;
-
-    public VoiceRecognitionService(AzureSpeechToTextClient speechToTextClient) {
-        this.speechToTextClient = speechToTextClient;
-    }
 
     public String processVoiceMessage(File audioFile) {
         try {

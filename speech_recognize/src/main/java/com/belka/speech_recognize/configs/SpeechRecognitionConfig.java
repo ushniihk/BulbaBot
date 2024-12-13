@@ -1,4 +1,4 @@
-package com.belka.speech_recognize;
+package com.belka.speech_recognize.configs;
 
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Configuration;
@@ -9,5 +9,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EntityScan("com.belka.speech_recognize")
 @EnableJpaRepositories("com.belka.speech_recognize")
-public class Config {
+public class SpeechRecognitionConfig {
 }

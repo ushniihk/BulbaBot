@@ -51,6 +51,8 @@ public class AudioServiceImpl implements AudioService {
     private String fileInfoUri;
     @Value("${service.file_storage.uri}")
     private String fileStorageUri;
+    @Value("${bot.audio.speech_recognition.uri}")
+    private String speechRecognitionServiceUrl;
 
     @Autowired
     public AudioServiceImpl(RestTemplate restTemplate, HttpHeaders headers, AudioRepository audioRepository,
@@ -73,13 +75,13 @@ public class AudioServiceImpl implements AudioService {
                 String audioIdInDB = getFileId(userId, today).orElse("");
                 writeDataToDB(voice, userId);
                 concatenateAudios(audioIdInDB, voice.getFileId());
-                log.info(analyzeVoice(audioRepository.getIdByDateAndUserId(today, userId).get()));  // fix this
+                log.info(analyzeVoice(audioRepository.getIdByDateAndUserId(today, userId).orElseThrow(() -> new RuntimeException("Audio ID not found"))));  // fix this
             } finally {
                 deleteVoice(voice.getFileId());
             }
         } else {
             writeDataToDB(voice, userId);
-            log.info(analyzeVoice(audioRepository.getIdByDateAndUserId(today, userId).get())); // fix this
+            log.info(analyzeVoice(audioRepository.getIdByDateAndUserId(today, userId).orElseThrow(() -> new RuntimeException("Audio ID not found"))));  // fix this
         }
     }
 
@@ -230,8 +232,8 @@ public class AudioServiceImpl implements AudioService {
         log.info("audios added to listening");
     }
 
-    public String analyzeVoice(String fileName) {
-        String url = "http://localhost:6182/voice/analyze?fileName=" + fileName + ".WAV";
+    private String analyzeVoice(String fileName) {
+        String url = speechRecognitionServiceUrl + fileName + ".WAV";
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
@@ -245,3 +247,9 @@ public class AudioServiceImpl implements AudioService {
         }
     }
 }
+//todo:how to make analyzeVoice run only when external service/speech_recognize module is running?;
+//todo: analyzeVoice should write data to DB but this data can be written to diary module or another one,
+// we need to think about that globally
+//todo: do refactor of all speech_recognize module, make it pretty and clean
+//todo: do refactor of AudioServiceImpl, make it pretty and clean
+

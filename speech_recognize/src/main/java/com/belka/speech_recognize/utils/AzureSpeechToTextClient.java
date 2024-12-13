@@ -1,4 +1,4 @@
-package com.belka.speech_recognize;
+package com.belka.speech_recognize.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
@@ -65,4 +65,3 @@ public class AzureSpeechToTextClient {
 }
 
 // todo: add the choose language option, because now it works only with russian language. To change language needs to change a header and serviceUrl
-// todo: add logging.
