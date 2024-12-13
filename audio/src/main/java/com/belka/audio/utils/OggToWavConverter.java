@@ -20,9 +20,9 @@ public class OggToWavConverter {
      * @param fileOgg path to file in DB
      */
     public void convert(String fileOgg) {
-        // trim the extension .ogg in the string and change it to .wav
+        // trim the extension .ogg in the string and change it to .wav and make sample rate is 16000 (we need this rate for cloud processing)
         String fileWav = fileOgg.substring(0, fileOgg.length() - 3) + WAV_EXTENSION;
-        String cmd = "ffmpeg -i " + fileOgg + " " + fileWav;
+        String cmd = String.format("ffmpeg -i %s -ar 16000 %s", fileOgg, fileWav);
         try {
             Process p = Runtime.getRuntime().exec(cmd);
             p.waitFor();

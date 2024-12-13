@@ -11,10 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,11 +73,13 @@ public class AudioServiceImpl implements AudioService {
                 String audioIdInDB = getFileId(userId, today).orElse("");
                 writeDataToDB(voice, userId);
                 concatenateAudios(audioIdInDB, voice.getFileId());
+                log.info(analyzeVoice(audioRepository.getIdByDateAndUserId(today, userId).get()));  // fix this
             } finally {
                 deleteVoice(voice.getFileId());
             }
         } else {
             writeDataToDB(voice, userId);
+            log.info(analyzeVoice(audioRepository.getIdByDateAndUserId(today, userId).get())); // fix this
         }
     }
 
@@ -229,5 +228,20 @@ public class AudioServiceImpl implements AudioService {
     public void changeStatus() {
         audioRepository.fillNotListened();
         log.info("audios added to listening");
+    }
+
+    public String analyzeVoice(String fileName) {
+        String url = "http://localhost:6182/voice/analyze?fileName=" + fileName + ".WAV";
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return response.getBody();
+            } else {
+                throw new RuntimeException("Voice analysis failed: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Error analyzing voice", e);
+            throw new RuntimeException("Error analyzing voice: " + e.getMessage(), e);
+        }
     }
 }

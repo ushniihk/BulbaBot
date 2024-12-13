@@ -1,6 +1,8 @@
 package com.belka.speech_recognize;
 
 
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,22 +11,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
-import java.util.Objects;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/voice")
 public class VoiceController {
     private final VoiceRecognitionService voiceRecognitionService;
 
-    public VoiceController(VoiceRecognitionService voiceRecognitionService) {
-        this.voiceRecognitionService = voiceRecognitionService;
-    }
+    @Value("${bot.audio.path}")
+    private String folderPath;
 
     @PostMapping("/analyze")
     public ResponseEntity<String> analyzeVoice(@RequestParam("fileName") String fileName) {
         try {
             // File folder path
-            File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource(fileName)).toURI());
+            Path filePath = Paths.get(folderPath, fileName);
+            File file = filePath.toFile();
             // Check if the file exists
             if (!file.exists()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found: " + fileName);
