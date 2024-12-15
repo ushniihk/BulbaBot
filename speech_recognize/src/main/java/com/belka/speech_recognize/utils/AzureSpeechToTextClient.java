@@ -1,5 +1,8 @@
 package com.belka.speech_recognize.utils;
 
+import com.belka.speech_recognize.exceptions.AzureSpeechRecognitionException;
+import com.belka.speech_recognize.exceptions.BadRequestException;
+import com.belka.speech_recognize.exceptions.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -7,9 +10,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.hibernate.service.spi.ServiceException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -33,7 +35,7 @@ public class AzureSpeechToTextClient {
     public String recognizeSpeech(File audioFile) {
         log.info("Starting speech recognition for file: {}, size: {} bytes",
                 audioFile.getName(), audioFile.length());
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = createHttpClient()) {
             HttpPost postRequest = prepareRequest(audioFile);
             try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
                 String responseString = handleResponse(response);
@@ -42,9 +44,18 @@ public class AzureSpeechToTextClient {
             }
         } catch (IOException e) {
             log.error("I/O error during request: {}", e.getMessage(), e);
-            throw new ServiceException("I/O error during speech recognition request.", e);
+            throw new AzureSpeechRecognitionException("I/O error during speech recognition request.", e);
         }
     }
+
+    //todo: check how correctly we create here, maybe it's better to use default parameters.
+    private CloseableHttpClient createHttpClient() {
+        return HttpClientBuilder.create()
+                .setMaxConnTotal(100)  // Example of adding connection pooling
+                .setMaxConnPerRoute(20)  // Max connections per route
+                .build();
+    }
+
 
     private HttpPost prepareRequest(File audioFile) {
         HttpPost postRequest = new HttpPost(serviceUrl + acceptedLanguage);
@@ -63,10 +74,13 @@ public class AzureSpeechToTextClient {
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == 401) {
             log.error("Unauthorized: Invalid API key or insufficient permissions.");
-            throw new RuntimeException("Unauthorized: Invalid API key or insufficient permissions.");
+            throw new UnauthorizedException("Unauthorized: Invalid API key or insufficient permissions.");
+        } else if (statusCode == 400) {
+            log.error("Bad Request: HTTP {}", statusCode);
+            throw new BadRequestException("Bad Request: HTTP " + statusCode);
         } else if (statusCode >= 400) {
             log.error("Error response from Azure service: HTTP {}", statusCode);
-            throw new RuntimeException("Azure service error: HTTP " + statusCode);
+            throw new AzureSpeechRecognitionException("Azure service error: HTTP " + statusCode);
         }
         return EntityUtils.toString(response.getEntity());
     }
