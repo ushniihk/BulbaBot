@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS audio
     user_id   bigint,
     date      date,
     is_public boolean,
+    text      text,
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 comment on table audio is 'Stores information about audio files';

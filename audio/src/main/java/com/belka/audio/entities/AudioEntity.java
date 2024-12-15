@@ -35,4 +35,16 @@ public class AudioEntity {
      * The date when the audio was uploaded.
      */
     private LocalDate date;
+
+    /**
+     * The textual description of the audio.
+     * If null, it should return an empty string.
+     */
+    @Column(name = "text")
+    private String text;
+
+    // Custom getter to return an empty string when text is null
+    public String getText() {
+        return text == null ? "" : text;
+    }
 }

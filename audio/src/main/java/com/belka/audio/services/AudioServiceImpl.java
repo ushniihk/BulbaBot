@@ -70,39 +70,43 @@ public class AudioServiceImpl implements AudioService {
     @Transactional
     public void saveVoice(Voice voice, Long userId) {
         LocalDate today = LocalDate.now();
-        if (audioRepository.existsByDateAndUserId(today, userId)) {
+        String audioIdInDB = getFileId(userId, today).orElse("");
+        if (!audioIdInDB.isEmpty()) {
             try {
-                String audioIdInDB = getFileId(userId, today).orElse("");
                 writeDataToDB(voice, userId);
                 concatenateAudios(audioIdInDB, voice.getFileId());
-                log.info(analyzeVoice(audioRepository.getIdByDateAndUserId(today, userId).orElseThrow(() -> new RuntimeException("Audio ID not found"))));  // fix this
             } finally {
                 deleteVoice(voice.getFileId());
             }
         } else {
             writeDataToDB(voice, userId);
-            log.info(analyzeVoice(audioRepository.getIdByDateAndUserId(today, userId).orElseThrow(() -> new RuntimeException("Audio ID not found"))));  // fix this
         }
     }
 
     @Transactional
     public void writeDataToDB(Voice voice, Long userId) {
         String fileId = voice.getFileId();
-        ResponseEntity<String> response = getFilePath(fileId);
-        byte[] downloadFile = downloadFile(getFilePath(response));
-        Path filePath = Paths.get(pathToAudio, fileId + OGG);
         try {
-            Files.write(filePath, downloadFile);
-        } catch (IOException e) {
-            log.error("Error writing file", e);
+            ResponseEntity<String> response = getFilePath(fileId);
+            byte[] downloadFile = downloadFile(getFilePath(response));
+            Path filePath = Paths.get(pathToAudio, fileId + OGG);
+            try {
+                Files.write(filePath, downloadFile);
+            } catch (IOException e) {
+                log.error("Error writing file", e);
+            }
+            oggToWavConverter.convert(filePath.toString());
+            AudioEntity entity = AudioEntity.builder()
+                    .id(fileId)
+                    .date(LocalDate.now())
+                    .userId(userId)
+                    .text(analyzeVoice(fileId))
+                    .build();
+            audioRepository.save(entity);
+        } catch (Exception e) {
+            deleteVoice(fileId);
+            audioRepository.deleteById(fileId);
         }
-        oggToWavConverter.convert(filePath.toString());
-        AudioEntity entity = AudioEntity.builder()
-                .id(fileId)
-                .date(LocalDate.now())
-                .userId(userId)
-                .build();
-        audioRepository.save(entity);
     }
 
     @Override
