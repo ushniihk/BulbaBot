@@ -86,27 +86,55 @@ public class AudioServiceImpl implements AudioService {
     @Transactional
     public void writeDataToDB(Voice voice, Long userId) {
         String fileId = voice.getFileId();
+
         try {
-            ResponseEntity<String> response = getFilePath(fileId);
-            byte[] downloadFile = downloadFile(getFilePath(response));
-            Path filePath = Paths.get(pathToAudio, fileId + OGG);
-            try {
-                Files.write(filePath, downloadFile);
-            } catch (IOException e) {
-                log.error("Error writing file", e);
-            }
-            oggToWavConverter.convert(filePath.toString());
-            AudioEntity entity = AudioEntity.builder()
-                    .id(fileId)
-                    .date(LocalDate.now())
-                    .userId(userId)
-                    .text(analyzeVoice(fileId))
-                    .build();
-            audioRepository.save(entity);
+            // 1. Downloading a file and saving it to local storage
+            Path localPath = downloadAndSaveVoiceFile(fileId);
+
+            // 2. Convert OGG to WAV
+            convertOggToWav(localPath);
+
+            // 3. Voice analysis
+            String newText = analyzeVoice(fileId);
+
+            // 4. Saving data in the database
+            saveOrUpdateAudioRecord(fileId, userId, newText);
         } catch (Exception e) {
             deleteVoice(fileId);
             audioRepository.deleteById(fileId);
+            throw new RuntimeException("Error processing voice data", e);
         }
+    }
+
+    private Path downloadAndSaveVoiceFile(String fileId) throws IOException {
+        ResponseEntity<String> response = getFilePath(fileId);
+        byte[] downloadFile = downloadFile(getFilePath(response));
+        Path filePath = Paths.get(pathToAudio, fileId + OGG);
+        Files.write(filePath, downloadFile);
+        return filePath;
+    }
+
+    private void convertOggToWav(Path filePath) {
+        try {
+            oggToWavConverter.convert(filePath.toString());
+        } catch (Exception e) {
+            log.error("Error converting OGG to WAV", e);
+            throw new RuntimeException("Conversion failed", e);
+        }
+    }
+
+    private void saveOrUpdateAudioRecord(String fileId, Long userId, String newText) {
+        Optional<AudioEntity> existingAudio = audioRepository.findById(fileId);
+        String currentText = existingAudio.map(AudioEntity::getText).orElse("");
+        String updatedText = currentText.isEmpty() ? newText : currentText + " " + newText;
+
+        AudioEntity entity = AudioEntity.builder()
+                .id(fileId)
+                .date(LocalDate.now())
+                .userId(userId)
+                .text(updatedText)
+                .build();
+        audioRepository.save(entity);
     }
 
     @Override
@@ -256,4 +284,5 @@ public class AudioServiceImpl implements AudioService {
 // we need to think about that globally
 //todo: do refactor of all speech_recognize module, make it pretty and clean
 //todo: do refactor of AudioServiceImpl, make it pretty and clean
+//todo: text don't concatenate, need to fix it
 

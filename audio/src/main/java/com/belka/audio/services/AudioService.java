@@ -84,3 +84,5 @@ public interface AudioService {
      */
     Optional<String> getFileId(Long userId, LocalDate date);
 }
+
+//todo: add the ability to get one audio that aggregates all the audios for the week/month/year

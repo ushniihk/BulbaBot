@@ -48,11 +48,10 @@ public class AzureSpeechToTextClient {
         }
     }
 
-    //todo: check how correctly we create here, maybe it's better to use default parameters.
     private CloseableHttpClient createHttpClient() {
         return HttpClientBuilder.create()
-                .setMaxConnTotal(100)  // Example of adding connection pooling
-                .setMaxConnPerRoute(20)  // Max connections per route
+                .setMaxConnTotal(100)  // Maximum of 100 connections simultaneously for all hosts.
+                .setMaxConnPerRoute(20)  // Maximum of 20 connections at a time for one specific host.
                 .build();
     }
 
