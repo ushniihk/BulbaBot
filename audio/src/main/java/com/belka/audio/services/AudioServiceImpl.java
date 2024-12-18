@@ -6,10 +6,9 @@ import com.belka.audio.repositories.AudioRepository;
 import com.belka.audio.repositories.NotListenedRepository;
 import com.belka.audio.utils.OggToWavConverter;
 import com.belka.core.converters.ConverterService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,7 +31,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class AudioServiceImpl implements AudioService {
     final static String OGG = ".ogg";
@@ -54,54 +53,47 @@ public class AudioServiceImpl implements AudioService {
     @Value("${bot.audio.speech_recognition.uri}")
     private String speechRecognitionServiceUrl;
 
-    @Autowired
-    public AudioServiceImpl(RestTemplate restTemplate, HttpHeaders headers, AudioRepository audioRepository,
-                            NotListenedRepository notListenedRepository, ConverterService converterService,
-                            OggToWavConverter oggToWavConverter) {
-        this.restTemplate = restTemplate;
-        this.headers = headers;
-        this.audioRepository = audioRepository;
-        this.notListenedRepository = notListenedRepository;
-        this.converterService = converterService;
-        this.oggToWavConverter = oggToWavConverter;
-    }
-
     @Override
     @Transactional
     public void saveVoice(Voice voice, Long userId) {
         LocalDate today = LocalDate.now();
-        String audioIdInDB = getFileId(userId, today).orElse("");
-        if (!audioIdInDB.isEmpty()) {
-            try {
-                writeDataToDB(voice, userId);
-                concatenateAudios(audioIdInDB, voice.getFileId());
-            } finally {
-                deleteVoice(voice.getFileId());
+        String existingAudioId = getFileId(userId, today).orElse("");
+        String newFileId = voice.getFileId();
+        try {
+            // Save an audio file to local storage
+            saveAudioToLocalStorage(newFileId);
+
+            if (!existingAudioId.isEmpty()) {
+                // Concatenate all an audio and new one
+                concatenateAudios(existingAudioId, newFileId);
+                // Voice analysis
+                String newText = analyzeVoice(newFileId);
+                // Save data to DB
+                saveOrUpdateAudioInDB(existingAudioId, newFileId, userId, newText);
+            } else {
+                // Voice analysis
+                String newText = analyzeVoice(newFileId);
+                // Save data to DB
+                saveOrUpdateAudioInDB(existingAudioId, newFileId, userId, newText);
             }
-        } else {
-            writeDataToDB(voice, userId);
+        } catch (Exception e) {
+            log.error("Error processing voice data", e);
+            throw new RuntimeException("Error processing voice data", e);
         }
     }
 
-    @Transactional
-    public void writeDataToDB(Voice voice, Long userId) {
-        String fileId = voice.getFileId();
 
+    @Transactional
+    public void saveAudioToLocalStorage(String fileId) {
         try {
-            // 1. Downloading a file and saving it to local storage
+            // Downloading a file and saving it to local storage
             Path localPath = downloadAndSaveVoiceFile(fileId);
 
-            // 2. Convert OGG to WAV
+            // Convert OGG to WAV
             convertOggToWav(localPath);
 
-            // 3. Voice analysis
-            String newText = analyzeVoice(fileId);
-
-            // 4. Saving data in the database
-            saveOrUpdateAudioRecord(fileId, userId, newText);
         } catch (Exception e) {
             deleteVoice(fileId);
-            audioRepository.deleteById(fileId);
             throw new RuntimeException("Error processing voice data", e);
         }
     }
@@ -123,10 +115,11 @@ public class AudioServiceImpl implements AudioService {
         }
     }
 
-    private void saveOrUpdateAudioRecord(String fileId, Long userId, String newText) {
-        Optional<AudioEntity> existingAudio = audioRepository.findById(fileId);
+    private void saveOrUpdateAudioInDB(String existingAudioId, String newAudioId, Long userId, String newText) {
+        Optional<AudioEntity> existingAudio = audioRepository.findById(existingAudioId);
         String currentText = existingAudio.map(AudioEntity::getText).orElse("");
         String updatedText = currentText.isEmpty() ? newText : currentText + " " + newText;
+        String fileId = existingAudioId.isEmpty() ? newAudioId : existingAudioId;
 
         AudioEntity entity = AudioEntity.builder()
                 .id(fileId)
@@ -285,4 +278,5 @@ public class AudioServiceImpl implements AudioService {
 //todo: do refactor of all speech_recognize module, make it pretty and clean
 //todo: do refactor of AudioServiceImpl, make it pretty and clean
 //todo: text don't concatenate, need to fix it
+//todo: Improve the analyzeVoice method to check if the external service is available before processing. It's discussed
 
