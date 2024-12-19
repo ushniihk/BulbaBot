@@ -19,15 +19,6 @@ public interface AudioService {
      */
     void saveVoice(Voice voice, Long userId);
 
-
-    /**
-     * Retrieves the path to a {@link Voice} in the local database.
-     *
-     * @param fileId the ID of the {@link Voice}
-     * @return the path to the {@link Voice} in the local database
-     */
-    String getPathToAudio(String fileId);
-
     /**
      * Deletes a {@link Voice}.
      *
