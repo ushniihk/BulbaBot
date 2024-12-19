@@ -33,7 +33,7 @@ public interface AudioService {
      *
      * @param fileId the ID of the {@link Voice} to delete
      */
-    void deleteVoice(String fileId);
+    void deleteAudio(String fileId);
 
     /**
      * Changes the status of a {@link Voice} to public or private.

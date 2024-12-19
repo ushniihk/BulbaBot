@@ -80,7 +80,7 @@ public class SaveAudioHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleDeleteCommand(Long chatId) {
-        audioService.deleteVoice(previousService.getData(chatId));
+        audioService.deleteAudio(previousService.getData(chatId));
         savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
         recordStats(getStats(chatId));
         return Flux.just(sendMessage(chatId, DELETE_MESSAGE));

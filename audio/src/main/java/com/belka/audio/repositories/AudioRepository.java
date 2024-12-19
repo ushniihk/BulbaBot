@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -26,4 +27,7 @@ public interface AudioRepository extends JpaRepository<AudioEntity, String>, Aud
 
     @Query(value = "SELECT a.id FROM audio a WHERE a.date = :date AND a.user_id = :userId ORDER BY a.id LIMIT 1", nativeQuery = true)
     Optional<String> getIdByDateAndUserId(LocalDate date, Long userId);
+
+    List<AudioEntity> findByDate(LocalDate date);
+
 }
