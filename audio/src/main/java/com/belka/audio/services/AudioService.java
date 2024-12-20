@@ -74,6 +74,14 @@ public interface AudioService {
      * @return an {@link Optional} containing the audio ID if found, or an empty {@link Optional} otherwise
      */
     Optional<String> getFileId(Long userId, LocalDate date);
+
+    /**
+     * Retrieves the path to the audio file in the local database.
+     *
+     * @param fileId the ID of the audio file
+     * @return the path to the audio file in the local database
+     */
+    String getPathToAudio(String fileId);
 }
 
 //todo: add the ability to get one audio that aggregates all the audios for the week/month/year

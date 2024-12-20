@@ -3,7 +3,6 @@ package com.belka.audio.handlers;
 import com.belka.audio.models.NotListened;
 import com.belka.audio.services.AudioCalendarService;
 import com.belka.audio.services.AudioService;
-import com.belka.audio.services.FileStorageService;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.models.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
@@ -30,7 +29,6 @@ public class PullAudioHandler extends AbstractBelkaHandler {
     private final static String CLASS_NAME = PullAudioHandler.class.getSimpleName();
     private final static String NO_AUDIO_ANSWER = "there are no new audios for you";
     private final AudioService audioService;
-    private final FileStorageService fileStorageService;
     private final ExecutorService executorService;
     private final StatsService statsService;
     private final CompletableFutureUtil completableFutureUtil;
@@ -60,7 +58,7 @@ public class PullAudioHandler extends AbstractBelkaHandler {
 
         savePreviousAndStats(chatId);
 
-        return Flux.just(sendAudioFromLocalStorage(fileStorageService.getPathToAudio(fileId), chatId));
+        return Flux.just(sendAudioFromLocalStorage(audioService.getPathToAudio(fileId), chatId));
     }
 
     private Flux<PartialBotApiMethod<?>> handleCalendarCallback(BelkaEvent event) {
@@ -74,7 +72,7 @@ public class PullAudioHandler extends AbstractBelkaHandler {
         if (fileId.isEmpty()) {
             return Flux.just(sendMessage(chatId, NO_AUDIO_ANSWER));
         }
-        return Flux.just(sendAudioFromLocalStorage(fileStorageService.getPathToAudio(fileId), chatId));
+        return Flux.just(sendAudioFromLocalStorage(audioService.getPathToAudio(fileId), chatId));
     }
 
     private boolean isCalendarCallback(BelkaEvent event) {

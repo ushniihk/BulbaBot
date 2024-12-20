@@ -2,9 +2,6 @@ package com.belka.audio.services;
 
 import com.belka.audio.entities.AudioEntity;
 import com.belka.audio.models.NotListened;
-import com.belka.audio.repositories.AudioRepository;
-import com.belka.audio.repositories.NotListenedRepository;
-import com.belka.core.converters.ConverterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,10 +19,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class AudioServiceImpl implements AudioService {
-    private final AudioRepository audioRepository;
-    private final NotListenedRepository notListenedRepository;
-    private final ConverterService converterService;
     private final FileStorageService fileStorageService;
+    private final AudioDatabaseService audioDatabaseService;
     private final AudioRecognitionService audioRecognitionService;
 
     @Override
@@ -36,21 +31,11 @@ public class AudioServiceImpl implements AudioService {
             // Save an audio file to local storage
             fileStorageService.saveAudioToLocalStorage(fileId);
             String text = audioRecognitionService.analyzeVoice(fileId);
-            saveAudioToDB(fileId, userId, text);
+            audioDatabaseService.saveAudio(fileId, userId, text);
         } catch (Exception e) {
             log.error("Error processing voice data", e);
             throw new RuntimeException("Error processing voice data", e);
         }
-    }
-
-    private void saveAudioToDB(String fileId, Long userId, String text) {
-        AudioEntity entity = AudioEntity.builder()
-                .id(fileId)
-                .date(LocalDate.now())
-                .userId(userId)
-                .text(text)
-                .build();
-        audioRepository.save(entity);
     }
 
     @Override
@@ -58,7 +43,7 @@ public class AudioServiceImpl implements AudioService {
     public void deleteAudio(String fileId) {
         try {
             fileStorageService.deleteAudioFromLocalStorage(fileId);
-            deleteAudioFromDB(fileId);
+            audioDatabaseService.deleteAudioFromDB(fileId);
         } catch (Exception e) {
             log.error("Error deleting file", e);
         }
@@ -67,42 +52,43 @@ public class AudioServiceImpl implements AudioService {
     @Override
     @Transactional
     public void changeIsPrivateFlag(boolean flag, String fileId) {
-        audioRepository.changeIsPrivateFlag(flag, fileId);
+        audioDatabaseService.changeIsPrivateFlag(flag, fileId);
     }
 
     @Override
     public void removeAudioFromListening(Long userId, String fileId) {
-        audioRepository.deleteFromNotListened(userId, fileId);
-    }
-
-    private void deleteAudioFromDB(String fileId) {
-        audioRepository.deleteById(fileId);
+        audioDatabaseService.removeAudioFromListening(userId, fileId);
     }
 
     @Override
     public NotListened getMetaDataAudioForPull() {
-        return converterService.convertTo(NotListened.class, notListenedRepository.getOldestAudio());
+        return audioDatabaseService.getMetaDataAudioForPull();
     }
 
     @Override
     public boolean existAudioForUser(Long userId) {
-        return notListenedRepository.existsBySubscriber(userId);
+        return audioDatabaseService.existAudioForUser(userId);
     }
 
     @Override
     public boolean existsByUserIdAndDate(Long userId, LocalDate date) {
-        return audioRepository.existsByDateAndUserId(date, userId);
+        return audioDatabaseService.existsByUserIdAndDate(userId, date);
     }
 
     @Override
     public Optional<String> getFileId(Long userId, LocalDate date) {
-        return audioRepository.getIdByDateAndUserId(date, userId);
+        return audioDatabaseService.getFileId(userId, date);
+    }
+
+    @Override
+    public String getPathToAudio(String fileId) {
+        return fileStorageService.getPathToAudio(fileId);
     }
 
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void changeStatus() {
-        audioRepository.fillNotListened();
+        audioDatabaseService.changeStatus();
         log.info("audios added to listening");
     }
 
@@ -113,8 +99,7 @@ public class AudioServiceImpl implements AudioService {
         log.info("Starting daily audio merge for date: {}", yesterday);
 
         // Get all audio recordings for yesterday, grouped by userId
-        Map<Long, List<AudioEntity>> userAudios = audioRepository.findByDate(yesterday).stream()
-                .collect(Collectors.groupingBy(AudioEntity::getUserId));
+        Map<Long, List<AudioEntity>> userAudios = audioDatabaseService.getUserAudiosByDate(yesterday);
 
         for (Map.Entry<Long, List<AudioEntity>> entry : userAudios.entrySet()) {
             Long userId = entry.getKey();
@@ -147,10 +132,10 @@ public class AudioServiceImpl implements AudioService {
                         .text(mergedText)
                         .build();
 
-                audioRepository.save(mergedAudio);
+                audioDatabaseService.saveAudio(mergedAudio);
 
                 // Delete source records from the database
-                audioRepository.deleteAll(audios);
+                audioDatabaseService.deleteAudios(audios);
 
                 log.info("Successfully merged audios for userId: {} into file: {}", userId, mergedFileId);
             } catch (Exception e) {
@@ -167,5 +152,5 @@ public class AudioServiceImpl implements AudioService {
 //todo: do refactor of all speech_recognize module, make it pretty and clean
 //todo: do refactor of AudioServiceImpl, make it pretty and clean
 //todo: Improve the analyzeVoice method to check if the external service is available before processing. It's discussed
-//todo: add /healt endpoint to check if the recognition service is available, if not pass "" text;
+//todo: add /health endpoint to check if the recognition service is available, if not pass "" text;
 //todo: now when we want to pull audio before they merged we get the first audio, but it's not properly, we need to think about how to fix it
