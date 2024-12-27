@@ -60,7 +60,7 @@ public class AudioRecognitionServiceImpl implements AudioRecognitionService {
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
 
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            if (response.getStatusCode() == HttpStatus.OK) {
                 log.info("Audio analysis successful for file: {}", fileName);
                 return response.getBody();
             } else {
