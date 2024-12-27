@@ -30,7 +30,7 @@ public class AudioServiceImpl implements AudioService {
         try {
             // Save an audio file to local storage
             fileStorageService.saveAudioToLocalStorage(fileId);
-            String text = audioRecognitionService.analyzeVoice(fileId);
+            String text = audioRecognitionService.analyzeAudio(fileId);
             audioDatabaseService.saveAudio(fileId, userId, text);
         } catch (Exception e) {
             log.error("Error processing voice data", e);
@@ -154,3 +154,4 @@ public class AudioServiceImpl implements AudioService {
 //todo: Improve the analyzeVoice method to check if the external service is available before processing. It's discussed
 //todo: add /health endpoint to check if the recognition service is available, if not pass "" text;
 //todo: now when we want to pull audio before they merged we get the first audio, but it's not properly, we need to think about how to fix it
+//todo: add profiles for properties like prod and dev

@@ -1,9 +1,10 @@
 package com.belka.speech_recognize.services;
 
-import com.belka.speech_recognize.exceptions.VoiceRecognitionException;
+import com.belka.speech_recognize.exceptions.AudioRecognitionException;
 import com.belka.speech_recognize.utils.AzureSpeechToTextClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,11 @@ public class VoiceRecognitionServiceImpl implements VoiceRecognitionService {
     private final AzureSpeechToTextClient speechToTextClient;
 
     @Override
-    @Retryable(value = VoiceRecognitionException.class, maxAttempts = 3)
+    @Retryable(
+            value = AudioRecognitionException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500, multiplier = 1.5)
+    )
     public String processVoiceMessage(File audioFile) {
         validateAudioFile(audioFile);
 
@@ -28,10 +33,18 @@ public class VoiceRecognitionServiceImpl implements VoiceRecognitionService {
             String result = speechToTextClient.recognizeSpeech(audioFile);
             log.info("Voice recognition successful for file: {}", audioFile.getName());
             return result;
+        } catch (AudioRecognitionException e) {
+            log.error("Error during voice recognition for file: {} - {}", audioFile.getName(), e.getMessage());
+            throw e; // Rethrow to allow retrying
         } catch (Exception e) {
-            log.error("Error during voice recognition for file: {}", audioFile.getName(), e);
-            throw new VoiceRecognitionException("Voice recognition failed for file: " + audioFile.getName(), e);
+            log.error("Unexpected error during voice recognition for file: {}", audioFile.getName(), e);
+            throw new AudioRecognitionException("Unexpected error for file: " + audioFile.getName(), e);
         }
+    }
+
+    public boolean isServiceAvailable() {
+        log.info("Checking speech recognition service availability...");
+        return speechToTextClient.isServiceAvailable();
     }
 
     /**
