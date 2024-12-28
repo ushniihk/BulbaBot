@@ -1,6 +1,6 @@
 package com.belka.speech_recognize.services;
 
-import com.belka.speech_recognize.exceptions.AudioRecognitionException;
+import com.belka.speech_recognize.exceptions.SpeechRecognitionException;
 import com.belka.speech_recognize.utils.AzureSpeechToTextClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,32 +13,32 @@ import java.io.File;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class VoiceRecognitionServiceImpl implements VoiceRecognitionService {
+public class SpeechRecognitionServiceImpl implements SpeechRecognitionService {
 
     private final AzureSpeechToTextClient speechToTextClient;
 
     @Override
     @Retryable(
-            value = AudioRecognitionException.class,
+            value = SpeechRecognitionException.class,
             maxAttempts = 3,
             backoff = @Backoff(delay = 500, multiplier = 1.5)
     )
-    public String processVoiceMessage(File audioFile) {
+    public String processAudioFile(File audioFile) {
         validateAudioFile(audioFile);
 
-        log.info("Starting voice recognition for file: {} (size: {} bytes, path: {})",
+        log.info("Starting speech recognition for file: {} (size: {} bytes, path: {})",
                 audioFile.getName(), audioFile.length(), audioFile.getAbsolutePath());
 
         try {
             String result = speechToTextClient.recognizeSpeech(audioFile);
-            log.info("Voice recognition successful for file: {}", audioFile.getName());
+            log.info("Speech recognition successful for file: {}", audioFile.getName());
             return result;
-        } catch (AudioRecognitionException e) {
-            log.error("Error during voice recognition for file: {} - {}", audioFile.getName(), e.getMessage());
+        } catch (SpeechRecognitionException e) {
+            log.error("Error during speech recognition for file: {} - {}", audioFile.getName(), e.getMessage());
             throw e; // Rethrow to allow retrying
         } catch (Exception e) {
-            log.error("Unexpected error during voice recognition for file: {}", audioFile.getName(), e);
-            throw new AudioRecognitionException("Unexpected error for file: " + audioFile.getName(), e);
+            log.error("Unexpected error during speech recognition for file: {}", audioFile.getName(), e);
+            throw new SpeechRecognitionException("Unexpected error for file: " + audioFile.getName(), e);
         }
     }
 

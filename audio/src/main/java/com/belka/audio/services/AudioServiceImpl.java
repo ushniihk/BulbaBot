@@ -146,7 +146,6 @@ public class AudioServiceImpl implements AudioService {
         log.info("Daily audio merge completed.");
     }
 }
-//todo:how to make analyzeVoice run only when external service/speech_recognize module is running?;
 //todo: think how to show text data to user
 //todo: we can make also audio from a week or a month
 //todo: do refactor of all speech_recognize module, make it pretty and clean

@@ -1,7 +1,7 @@
 package com.belka.speech_recognize.exceptions;
 
 /**
- * Exception thrown when an error occurs during voice recognition.
+ * Exception thrown when an error occurs during speech recognition.
  */
 public class BadRequestException extends RuntimeException {
     public BadRequestException(String message) {

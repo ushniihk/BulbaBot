@@ -1,7 +1,7 @@
 package com.belka.speech_recognize.controllers;
 
 
-import com.belka.speech_recognize.services.VoiceRecognitionService;
+import com.belka.speech_recognize.services.SpeechRecognitionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,15 +15,15 @@ import java.nio.file.Paths;
 
 @Slf4j
 @RestController
-@RequestMapping("/voice")
+@RequestMapping("/speech")
 @RequiredArgsConstructor
 public class SpeechRecognitionController {
-    private final VoiceRecognitionService voiceRecognitionService;
+    private final SpeechRecognitionService speechRecognitionService;
     @Value("${bot.audio.path}")
     private String folderPath;
 
     @PostMapping("/analyze")
-    public ResponseEntity<String> analyzeVoice(@RequestParam("fileName") String fileName) {
+    public ResponseEntity<String> analyzeSpeech(@RequestParam("fileName") String fileName) {
         if (!isValidFileName(fileName)) {
             log.warn("Invalid file name provided: {}", fileName);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File name cannot be empty or null.");
@@ -33,21 +33,21 @@ public class SpeechRecognitionController {
             log.warn("File not found: {}", fileName);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found: " + fileName);
         }
-        log.info("Starting voice analysis for file: {}", fileName);
+        log.info("Starting speech analysis for file: {}", fileName);
         try {
-            String result = voiceRecognitionService.processVoiceMessage(file);
-            log.info("Voice analysis completed for file: {}", fileName);
+            String result = speechRecognitionService.processAudioFile(file);
+            log.info("Speech analysis completed for file: {}", fileName);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            log.error("Voice analysis error for file: {}", fileName, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing voice message: " + e.getMessage());
+            log.error("Speech analysis error for file: {}", fileName, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing speech: " + e.getMessage());
         }
     }
 
     @GetMapping("/health")
     public ResponseEntity<String> checkHealth() {
         try {
-            boolean isServiceAvailable = voiceRecognitionService.isServiceAvailable();
+            boolean isServiceAvailable = speechRecognitionService.isServiceAvailable();
             if (isServiceAvailable) {
                 return ResponseEntity.ok("Speech recognition service is available.");
             } else {
