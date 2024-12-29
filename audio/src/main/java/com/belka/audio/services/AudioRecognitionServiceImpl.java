@@ -28,8 +28,11 @@ public class AudioRecognitionServiceImpl implements AudioRecognitionService {
             log.error("Speech recognition service is not available");
             return "";
         }
-
-        return executePostRequest(url, fileName);
+        String text = executePostRequest(url, fileName);
+        if (text == null) {
+            return "";
+        }
+        return text;
     }
 
     /**
