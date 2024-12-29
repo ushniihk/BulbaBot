@@ -17,10 +17,10 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 /**
  * building and sending messages, receiving and processing {@link Update updates}
@@ -31,15 +31,13 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private final BotConfig botConfig;
     private final HandlerService handlerService;
-    private final ExecutorService executorService;
 
     @Autowired
-    public TelegramBot(BotConfig botConfig, HandlerService handlerService, ExecutorService executorService,
+    public TelegramBot(BotConfig botConfig, HandlerService handlerService,
                        DefaultBotOptions options) {
         super(options, botConfig.getToken());
         this.botConfig = botConfig;
         this.handlerService = handlerService;
-        this.executorService = executorService;
         setCommands();
 
     }
@@ -57,11 +55,10 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() || update.hasCallbackQuery()) {
-            executorService.execute(() -> {
-                handlerService.handle(update)
-                        .subscribe(this::executeMessage, this::handleError);
-                log.info("end of the onUpdateReceived method");
-            });
+            handlerService.handle(update)
+                    .subscribeOn(Schedulers.boundedElastic()) // Перенос обработки в другой поток
+                    .subscribe(this::executeMessage, this::handleError);
+            log.info("end of the onUpdateReceived method");
         }
     }
 

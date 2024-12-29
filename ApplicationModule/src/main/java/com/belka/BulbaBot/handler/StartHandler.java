@@ -17,9 +17,10 @@ import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.OffsetDateTime;
-import java.util.concurrent.ExecutorService;
 
 /**
  * а handler that initializes the user in the system and starts the interaction
@@ -32,7 +33,6 @@ public class StartHandler extends AbstractBelkaHandler {
     private final static String CODE = "/start";
     private final static String NEXT_HANDLER = "";
     private final static String CLASS_NAME = StartHandler.class.getSimpleName();
-    private final ExecutorService executorService;
     private final UserService userService;
     private final StatsService statsService;
     private final CompletableFutureUtil completableFutureUtil;
@@ -89,10 +89,10 @@ public class StartHandler extends AbstractBelkaHandler {
     }
 
     private void recordStats(Stats stats) {
-        executorService.execute(() -> {
-                    statsService.save(stats);
-                    log.info("Stats from {} have been recorded", CLASS_NAME);
-                }
-        );
+        Mono.fromRunnable(() -> statsService.save(stats))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(unused -> log.info("Stats from {} have been recorded", CLASS_NAME))
+                .doOnError(e -> log.error("Failed to record stats in {}: {}", CLASS_NAME, e.getMessage()))
+                .subscribe();
     }
 }

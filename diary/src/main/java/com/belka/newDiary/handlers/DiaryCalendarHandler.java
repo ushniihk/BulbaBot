@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -64,7 +66,7 @@ public class DiaryCalendarHandler extends AbstractBelkaHandler {
         Integer month = date.getMonth().getValue() - 1;
 
         savePreviousStep(chatId, NEXT_HANDLER);
-        saveStats(event.getChatId());
+        recordStats(getStats(chatId));
 
         return Flux.just(diaryCalendarService.sendCalendarMessage(chatId, year, month));
     }
@@ -79,7 +81,7 @@ public class DiaryCalendarHandler extends AbstractBelkaHandler {
         message.setReplyToMessageId(event.getUpdate().getCallbackQuery().getMessage().getMessageId());
 
         savePreviousStep(chatId, null);
-        saveStats(chatId);
+        recordStats(getStats(chatId));
 
         return Flux.just(editMessage(message, HEADER));
     }
@@ -92,11 +94,19 @@ public class DiaryCalendarHandler extends AbstractBelkaHandler {
                 .build());
     }
 
-    private void saveStats(Long userId) {
-        statsService.save(Stats.builder()
-                .userId(userId)
+    private Stats getStats(Long chatId) {
+        return Stats.builder()
+                .userId(chatId)
                 .handlerCode(DiaryCalendarHandler.CODE)
                 .requestTime(OffsetDateTime.now())
-                .build());
+                .build();
+    }
+
+    private void recordStats(Stats stats) {
+        Mono.fromRunnable(() -> statsService.save(stats))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(unused -> log.info("Stats from {} have been recorded", CLASS_NAME))
+                .doOnError(e -> log.error("Failed to record stats in {}: {}", CLASS_NAME, e.getMessage()))
+                .subscribe();
     }
 }

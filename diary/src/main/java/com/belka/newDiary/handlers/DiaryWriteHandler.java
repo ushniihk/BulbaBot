@@ -93,4 +93,6 @@ public class DiaryWriteHandler extends AbstractBelkaHandler {
                 .requestTime(OffsetDateTime.now())
                 .build());
     }
+    //todo: make save stats multithreaded
+
 }

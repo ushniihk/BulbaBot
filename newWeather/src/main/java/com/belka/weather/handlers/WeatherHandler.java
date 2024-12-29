@@ -12,10 +12,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.OffsetDateTime;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 /**
  * the handler that processes the weather request
@@ -28,7 +29,6 @@ public class WeatherHandler extends AbstractBelkaHandler {
     private final static String CODE = "/weather";
     private final static String NEXT_HANDLER = "";
     private final static String CLASS_NAME = WeatherHandler.class.getSimpleName();
-    private final ExecutorService executorService;
     private final WeatherService weatherService;
     private final StatsService statsService;
 
@@ -73,10 +73,10 @@ public class WeatherHandler extends AbstractBelkaHandler {
     }
 
     private void recordStats(Stats stats) {
-        executorService.execute(() -> {
-                    statsService.save(stats);
-                    log.info("Stats from {} have been recorded", CLASS_NAME);
-                }
-        );
+        Mono.fromRunnable(() -> statsService.save(stats))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(unused -> log.info("Stats from {} have been recorded", CLASS_NAME))
+                .doOnError(e -> log.error("Failed to record stats in {}: {}", CLASS_NAME, e.getMessage()))
+                .subscribe();
     }
 }

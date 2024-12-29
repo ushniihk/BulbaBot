@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.OffsetDateTime;
 
@@ -46,7 +48,7 @@ public class DiaryGetHeaderWriteHandler extends AbstractBelkaHandler {
     private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
         Long chatId = event.getChatId();
         savePreviousStep(chatId);
-        saveStats(chatId);
+        recordStats(getStats(chatId));
         return Flux.just(sendMessage(chatId, HEADER));
     }
 
@@ -62,11 +64,19 @@ public class DiaryGetHeaderWriteHandler extends AbstractBelkaHandler {
                 .build());
     }
 
-    private void saveStats(Long userId) {
-        statsService.save(Stats.builder()
-                .userId(userId)
+    private Stats getStats(Long chatId) {
+        return Stats.builder()
+                .userId(chatId)
                 .handlerCode(CODE)
                 .requestTime(OffsetDateTime.now())
-                .build());
+                .build();
+    }
+
+    private void recordStats(Stats stats) {
+        Mono.fromRunnable(() -> statsService.save(stats))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(unused -> log.info("Stats from {} have been recorded", CLASS_NAME))
+                .doOnError(e -> log.error("Failed to record stats in {}: {}", CLASS_NAME, e.getMessage()))
+                .subscribe();
     }
 }

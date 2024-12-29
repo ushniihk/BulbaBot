@@ -12,7 +12,10 @@ import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -27,7 +30,6 @@ public abstract class AbstractBelkaHandler implements BelkaHandler {
 
     private BelkaSendMessage belkaSendMessage;
     private PreviousService previousService;
-    private ExecutorService executorService;
 
     @Autowired
     public void setBelkaSendMessage(BelkaSendMessage belkaSendMessage) {
@@ -37,11 +39,6 @@ public abstract class AbstractBelkaHandler implements BelkaHandler {
     @Autowired
     public void setPreviousService(PreviousService previousService) {
         this.previousService = previousService;
-    }
-
-    @Autowired
-    public void setExecutorService(ExecutorService executorService) {
-        this.executorService = executorService;
     }
 
     @Override
@@ -78,23 +75,22 @@ public abstract class AbstractBelkaHandler implements BelkaHandler {
     }
 
     protected Flux<PartialBotApiMethod<?>> getCompleteFuture(CompletableFuture<Flux<PartialBotApiMethod<?>>> future, Long chatId) {
-        try {
-            return future.get(timeout, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            log.error("request was interrupted with timeout");
-            return Flux.just(sendMessage(chatId, TIMEOUT_MESSAGE));
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("request was interrupted");
-            return Flux.just(sendMessage(chatId, EXCEPTION_MESSAGE));
-        }
+        return Mono.fromFuture(() -> future)  // Convert CompletableFuture<Flux> to Mono<Flux>
+                .flatMapMany(Flux::from)  // Convert Mono<Flux> to Flux
+                .timeout(Duration.ofSeconds(timeout))  // set timeout
+                .switchIfEmpty(Flux.just(sendMessage(chatId, TIMEOUT_MESSAGE)))  // handle timeout
+                .onErrorResume(e -> {  // handle exception
+                    log.error("Request was interrupted", e);
+                    return Flux.just(sendMessage(chatId, EXCEPTION_MESSAGE));
+                });
     }
 
     protected void savePreviousStep(PreviousStepDto previousStep, String handlerName) {
-        executorService.execute(() -> {
-                    previousService.save(previousStep);
-                    log.info("Previous step from {} has been saved", handlerName);
-                }
-        );
+        Mono.fromRunnable(() -> previousService.save(previousStep))
+                .subscribeOn(Schedulers.boundedElastic()) // Для обработки блокирующего кода в другом потоке
+                .doOnSuccess(unused -> log.info("Previous step from {} has been saved", handlerName))
+                .doOnError(e -> log.error("Failed to save previous step from {}: {}", handlerName, e.getMessage()))
+                .subscribe();
     }
 
     protected boolean isMatchingCommand(BelkaEvent event, String code) {

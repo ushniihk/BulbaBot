@@ -18,11 +18,12 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 @Component
 @AllArgsConstructor
@@ -37,7 +38,6 @@ public class EntranceAudioHandler extends AbstractBelkaHandler {
     final static String BUTTON_SUBSCRIBERS = "subscribers";
     final static String BUTTON_SUBSCRIPTIONS = "subscriptions";
     private final static String HEADER = "what would you like to do?";
-    private final ExecutorService executorService;
     private final StatsService statsService;
     private final CompletableFutureUtil completableFutureUtil;
 
@@ -105,10 +105,10 @@ public class EntranceAudioHandler extends AbstractBelkaHandler {
     }
 
     private void recordStats(Stats stats) {
-        executorService.execute(() -> {
-                    statsService.save(stats);
-                    log.info("Stats from {} have been recorded", CLASS_NAME);
-                }
-        );
+        Mono.fromRunnable(() -> statsService.save(stats))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(unused -> log.info("Stats from {} have been recorded", CLASS_NAME))
+                .doOnError(e -> log.error("Failed to record stats in {}: {}", CLASS_NAME, e.getMessage()))
+                .subscribe();
     }
 }

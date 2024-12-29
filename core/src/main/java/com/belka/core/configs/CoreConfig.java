@@ -13,11 +13,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PreDestroy;
 import javax.sql.DataSource;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Core configuration class for setting up beans and data sources.
@@ -75,28 +71,5 @@ public class CoreConfig {
     @Bean
     HttpHeaders headers() {
         return new HttpHeaders();
-    }
-
-    @Bean
-    public ScheduledExecutorService ScheduledExecutorService() {
-        return Executors.newScheduledThreadPool(100);
-    }
-
-    /**
-     * Shuts down the ExecutorService when it's no longer needed.
-     */
-    @PreDestroy
-    public void shutDownExecutorService() {
-        ScheduledExecutorService().shutdown();
-        try {
-            if (!ScheduledExecutorService().awaitTermination(60, TimeUnit.SECONDS)) {
-                ScheduledExecutorService().shutdownNow();
-                if (!ScheduledExecutorService().awaitTermination(60, TimeUnit.SECONDS))
-                    log.error("ExecutorService did not terminate");
-            }
-        } catch (InterruptedException ie) {
-            ScheduledExecutorService().shutdownNow();
-            Thread.currentThread().interrupt();
-        }
     }
 }

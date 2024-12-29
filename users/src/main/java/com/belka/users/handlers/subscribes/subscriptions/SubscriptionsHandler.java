@@ -17,11 +17,12 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 /**
  * shows all commands that user can do with his subscriptions
@@ -37,7 +38,6 @@ public class SubscriptionsHandler extends AbstractBelkaHandler {
     private final static String BUTTON_SHOW_SUBSCRIPTIONS = "show all subscriptions";
     private final static String BUTTON_SUBSCRIBE_TO = "subscribe to someone";
     private final static String BUTTON_UNSUBSCRIBE = "unsubscribe from anyone";
-    private final ExecutorService executorService;
     private final StatsService statsService;
     private final CompletableFutureUtil completableFutureUtil;
 
@@ -98,10 +98,10 @@ public class SubscriptionsHandler extends AbstractBelkaHandler {
     }
 
     private void recordStats(Stats stats) {
-        executorService.execute(() -> {
-                    statsService.save(stats);
-                    log.info("Stats from {} have been recorded", CLASS_NAME);
-                }
-        );
+        Mono.fromRunnable(() -> statsService.save(stats))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(unused -> log.info("Stats from {} have been recorded", CLASS_NAME))
+                .doOnError(e -> log.error("Failed to record stats in {}: {}", CLASS_NAME, e.getMessage()))
+                .subscribe();
     }
 }

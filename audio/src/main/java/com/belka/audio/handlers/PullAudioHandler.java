@@ -15,10 +15,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.concurrent.ExecutorService;
 
 @Component
 @AllArgsConstructor
@@ -29,7 +30,6 @@ public class PullAudioHandler extends AbstractBelkaHandler {
     private final static String CLASS_NAME = PullAudioHandler.class.getSimpleName();
     private final static String NO_AUDIO_ANSWER = "there are no new audios for you";
     private final AudioService audioService;
-    private final ExecutorService executorService;
     private final StatsService statsService;
     private final CompletableFutureUtil completableFutureUtil;
 
@@ -102,10 +102,10 @@ public class PullAudioHandler extends AbstractBelkaHandler {
     }
 
     private void recordStats(Stats stats) {
-        executorService.execute(() -> {
-                    statsService.save(stats);
-                    log.info("Stats from {} have been recorded", CLASS_NAME);
-                }
-        );
+        Mono.fromRunnable(() -> statsService.save(stats))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(unused -> log.info("Stats from {} have been recorded", CLASS_NAME))
+                .doOnError(e -> log.error("Failed to record stats in {}: {}", CLASS_NAME, e.getMessage()))
+                .subscribe();
     }
 }
