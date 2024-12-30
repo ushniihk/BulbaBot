@@ -44,6 +44,7 @@ public class IncomingContactHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Contact contact = event.getUpdate().getMessage().getContact();
         if (userService.existsById(contact.getUserId())) {
             userService.toSubscribe(event.getChatId(), contact.getUserId());

@@ -16,7 +16,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * the handler that processes the weather request
@@ -35,17 +34,13 @@ public class WeatherHandler extends AbstractBelkaHandler {
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event, CODE)) {
-                    return handleCommand(event);
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
-            }
-            return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        return Mono.fromCallable(() -> isMatchingCommand(event, CODE))
+                .filter(isMatching -> isMatching) // Continue only if the command matches
+                .flatMapMany(isMatching -> handleCommand(event))
+                .onErrorResume(e -> {
+                    log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+                    return Flux.empty();
+                });
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {

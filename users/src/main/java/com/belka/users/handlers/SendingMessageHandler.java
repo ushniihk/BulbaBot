@@ -49,6 +49,7 @@ public class SendingMessageHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         String textToSend = EmojiParser.parseToUnicode(event.getText());
         savePreviousStep(getPreviousStep(chatId), CLASS_NAME);

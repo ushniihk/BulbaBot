@@ -56,7 +56,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() || update.hasCallbackQuery()) {
             handlerService.handle(update)
-                    .subscribeOn(Schedulers.boundedElastic()) // Перенос обработки в другой поток
+                    .subscribeOn(Schedulers.boundedElastic()) // Transfer processing to another thread
                     .subscribe(this::executeMessage, this::handleError);
             log.info("end of the onUpdateReceived method");
         }

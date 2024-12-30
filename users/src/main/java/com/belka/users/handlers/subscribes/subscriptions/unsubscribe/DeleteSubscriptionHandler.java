@@ -54,6 +54,7 @@ public class DeleteSubscriptionHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommandYes(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
         recordStats(getStats(chatId));
@@ -65,6 +66,7 @@ public class DeleteSubscriptionHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommandNo(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
         recordStats(getStats(chatId));

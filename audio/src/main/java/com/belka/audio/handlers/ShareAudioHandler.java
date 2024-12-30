@@ -52,6 +52,7 @@ public class ShareAudioHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleShareAudio(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         if (event.getData().equals(SaveAudioHandler.BUTTON_SHARE)) {
             audioService.changeIsPrivateFlag(true, previousService.getData(chatId));

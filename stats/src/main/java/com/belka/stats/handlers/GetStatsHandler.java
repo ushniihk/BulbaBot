@@ -49,6 +49,7 @@ public class GetStatsHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         switch (event.getData()) {
             case BUTTON_1 -> {

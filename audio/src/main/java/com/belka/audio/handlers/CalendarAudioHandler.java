@@ -58,6 +58,7 @@ public class CalendarAudioHandler extends AbstractBelkaHandler {
 
 
     private Flux<PartialBotApiMethod<?>> handleCalendarCallback(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         LocalDate date = LocalDate.now();
         Integer year = date.getYear();

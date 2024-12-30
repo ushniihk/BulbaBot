@@ -60,6 +60,7 @@ public class DiaryCalendarHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCalendar(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         LocalDate date = LocalDate.now();
         Integer year = date.getYear();
@@ -72,6 +73,7 @@ public class DiaryCalendarHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCalendarMonthChanging(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         String[] dateArray = event.getData().split("-");
         Integer year = Integer.parseInt(dateArray[1]);
         Integer month = Integer.parseInt(dateArray[2]);

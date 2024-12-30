@@ -48,6 +48,7 @@ public class PullAudioHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCalendarCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         if (!audioService.existAudioForUser(chatId)) {
             return Flux.just(sendMessage(chatId, "there are no new audios for you"));
@@ -62,6 +63,7 @@ public class PullAudioHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCalendarCallback(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         String[] data = event.getData().split("\\.");
         LocalDate date = LocalDate.of(Integer.parseInt(data[1]), Integer.parseInt(data[2]) + 1, Integer.parseInt(data[3]));

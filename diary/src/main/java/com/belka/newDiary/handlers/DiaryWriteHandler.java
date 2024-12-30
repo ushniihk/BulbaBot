@@ -55,6 +55,7 @@ public class DiaryWriteHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         diaryService.addNote(chatId, event.getText());
         savePreviousAndStats(chatId);

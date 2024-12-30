@@ -55,6 +55,7 @@ public class DiaryShareHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleYesCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         String note = PREFIX_FOR_NOTE + userService.getName(chatId) + "/n" + diaryService.getNote(LocalDate.now(), chatId);
         Collection<Long> followersId = userService.getFollowersId(chatId);
@@ -67,6 +68,7 @@ public class DiaryShareHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleNoCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         savePreviousAndStats(chatId);
         return Flux.just(sendMessage(chatId, ANSWER_FOR_SAVING));

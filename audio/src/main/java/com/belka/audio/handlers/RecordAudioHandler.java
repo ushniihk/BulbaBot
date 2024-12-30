@@ -56,6 +56,7 @@ public class RecordAudioHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleVoiceMessage(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         Voice voice = event.getUpdate().getMessage().getVoice();
         audioService.saveVoice(voice, chatId);

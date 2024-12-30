@@ -58,6 +58,7 @@ public class SaveAudioHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleMatchingCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         if (event.getData().equals(RecordAudioHandler.BUTTON_SAVE)) {
             return handleSaveCommand(chatId);

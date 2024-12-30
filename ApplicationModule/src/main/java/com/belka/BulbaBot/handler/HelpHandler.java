@@ -3,7 +3,6 @@ package com.belka.BulbaBot.handler;
 import com.belka.core.handlers.AbstractBelkaHandler;
 import com.belka.core.models.BelkaEvent;
 import com.belka.core.previous_step.dto.PreviousStepDto;
-import com.belka.core.utils.CompletableFutureUtil;
 import com.belka.stats.models.Stats;
 import com.belka.stats.services.StatsService;
 import lombok.AllArgsConstructor;
@@ -29,20 +28,21 @@ public class HelpHandler extends AbstractBelkaHandler {
     private final static String CLASS_NAME = HelpHandler.class.getSimpleName();
     private static final String TEXT_HELP = "This bot can show you weather in your city, generate QR code for you and get your diary.";
     private final StatsService statsService;
-    private final CompletableFutureUtil completableFutureUtil;
 
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        return completableFutureUtil.supplyAsync(() -> {
-            if (isMatchingCommand(event, CODE)) {
-                return handleCommand(event);
-            }
-            return Flux.empty();
-        }, CLASS_NAME).join();
+        return Mono.fromCallable(() -> isMatchingCommand(event, CODE))
+                .filter(isMatching -> isMatching) // Continue only if the command matches
+                .flatMapMany(isMatching -> handleCommand(event))
+                .onErrorResume(e -> {
+                    log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+                    return Flux.empty();
+                });
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
         recordStats(getStats(chatId));

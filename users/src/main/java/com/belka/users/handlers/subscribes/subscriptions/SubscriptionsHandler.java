@@ -54,6 +54,7 @@ public class SubscriptionsHandler extends AbstractBelkaHandler {
     }
 
     private Flux<PartialBotApiMethod<?>> handleCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
         recordStats(getStats(chatId));

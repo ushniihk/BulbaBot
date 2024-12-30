@@ -15,7 +15,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * the handler that processes the user's request to create a QR code
@@ -33,20 +32,17 @@ public class InitialCommandHandler extends AbstractBelkaHandler {
     @Override
     @Transactional
     public Flux<PartialBotApiMethod<?>> handle(BelkaEvent event) {
-        CompletableFuture<Flux<PartialBotApiMethod<?>>> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isMatchingCommand(event, CODE)) {
-                    return handleStartCommand(event);
-                }
-            } catch (Exception e) {
-                log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
-            }
-            return Flux.empty();
-        });
-        return getCompleteFuture(future, event.getChatId());
+        return Mono.fromCallable(() -> isMatchingCommand(event, CODE))
+                .filter(Boolean::booleanValue) // Continue only if the command matches
+                .flatMapMany(isMatching -> handleStartCommand(event))
+                .onErrorResume(e -> {
+                    log.error("Error handling event in {}: {}", CLASS_NAME, e.getMessage(), e);
+                    return Flux.empty();
+                });
     }
 
     private Flux<PartialBotApiMethod<?>> handleStartCommand(BelkaEvent event) {
+        log.info("Start command handling in a class {}", CLASS_NAME);
         Long chatId = event.getChatId();
         savePreviousStep(getPreviousStep(chatId), CLASS_NAME);
         recordStats(getStats(chatId));

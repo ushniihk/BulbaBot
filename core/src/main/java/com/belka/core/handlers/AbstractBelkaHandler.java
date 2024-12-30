@@ -74,6 +74,7 @@ public abstract class AbstractBelkaHandler implements BelkaHandler {
         return rowInlineOne;
     }
 
+    @Deprecated
     protected Flux<PartialBotApiMethod<?>> getCompleteFuture(CompletableFuture<Flux<PartialBotApiMethod<?>>> future, Long chatId) {
         return Mono.fromFuture(() -> future)  // Convert CompletableFuture<Flux> to Mono<Flux>
                 .flatMapMany(Flux::from)  // Convert Mono<Flux> to Flux
